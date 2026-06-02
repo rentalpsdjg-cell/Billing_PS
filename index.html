@@ -57,7 +57,6 @@
 </div>
 
 <script>
-  // PASTIKAN URL WEB APP GOOGLE SCRIPT ANDA DI BAWAH INI SUDAH BENAR
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuZZn52NlwNehwSV_rbxZXC0318hUgxaX9AvedQEsIn6OKKTiO9JVaCsEWkVEVFtfx/exec";
   
   window.SistemKasir = {
@@ -130,18 +129,11 @@
         riwayatJajananTeks = bagian[1];
       }
 
-      // Bersihkan teks tanggal jika terselip otomatis di kolom selesai
-      if (jamSelesaiTampil.includes("/")) {
-        var partsTanggal = jamSelesaiTampil.split(" ");
-        if(partsTanggal.length > 1) {
-          jamSelesaiTampil = partsTanggal[1]; // ambil bagian jam saja
-        }
-      }
-      
-      // Ambil format jam menit bersih (HH:mm)
       var matchJam = jamSelesaiTampil.match(/(\d{2}):(\d{2})/);
       if (matchJam) {
         jamSelesaiTampil = matchJam[1] + ":" + matchJam[2];
+      } else {
+        jamSelesaiTampil = "00:00";
       }
 
       const col = document.createElement('div');
@@ -195,7 +187,7 @@
       col.innerHTML = cardHTML;
       container.appendChild(col);
 
-      if (isMain && jamSelesaiTampil && jamSelesaiTampil.includes(":")) {
+      if (isMain && jamSelesaiTampil.includes(":")) {
         runTimerPintar(item.noPS, jamSelesaiTampil);
       }
     });
@@ -205,41 +197,32 @@
     try {
       let bagian = jamSelesaiStr.trim().split(":");
       if (bagian.length < 2) return;
-      
       const targetJam = parseInt(bagian[0], 10);
       const targetMenit = parseInt(bagian[1], 10);
-      
       function hitung() {
         const sekarang = new Date();
         const target = new Date();
         target.setHours(targetJam, targetMenit, 0, 0);
-        
         if (target.getTime() < sekarang.getTime() && (sekarang.getTime() - target.getTime() > 6 * 60 * 60 * 1000)) {
           target.setDate(target.getDate() + 1);
         }
-        
         const diff = target.getTime() - sekarang.getTime();
         const el = document.getElementById('t-' + id);
         if (!el) return;
-        
         if (diff <= 0) { 
           el.innerHTML = "WAKTU HABIS!"; 
           el.style.color = "#d35400"; 
           clearInterval(intervals[id]);
           return; 
         }
-        
         const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
         const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
         const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
         el.innerHTML = h + ':' + m + ':' + s;
       }
-      
       hitung();
       intervals[id] = setInterval(hitung, 1000);
-    } catch(e) {
-      console.log(e);
-    }
+    } catch(e) {}
   }
 
   function start(id) {
@@ -256,7 +239,6 @@
     const opt = selectEl.options[selectEl.selectedIndex];
     const namaJajanan = selectEl.value;
     const hargaJajanan = opt.getAttribute('data-harga');
-    
     document.getElementById('content').innerHTML = '<div class="loading-screen"><div class="spinner"></div><h3>Memasukkan Jajanan...</h3></div>';
     SistemKasir.withSuccessHandler(load).withFailureHandler(tanganiError).tambahJajananKeSheet(id, namaJajanan, hargaJajanan);
   }
@@ -273,31 +255,16 @@
     if (!item) return alert("Gagal mencetak nota.");
     let riwayat = "Tidak ada jajanan";
     if (item.selesai && item.selesai.indexOf(" | Jrn:") !== -1) riwayat = item.selesai.split(" | Jrn:")[1];
-    
     let jamSelesaiClean = item.selesai.split(" | Jrn:")[0];
-
     const win = window.open("", "_blank");
     win.document.write('<html><head><title>NOTA</title><style>body{font-family:monospace;width:52mm;font-size:10px;margin:0;padding:4px;}.line{border-top:1px dashed #000;margin:5px 0;}.text-center{text-align:center;}</style></head><body><div class="text-center"><b>BILLING DODI JAYA</b></div><div class="line"></div>Station : ' + item.noPS + '<br>Durasi  : ' + item.durasi + ' Jam<br>Selesai : ' + jamSelesaiClean + ' WIB<div class="line"></div><b>Jajanan:</b><br>' + riwayat + '<div class="line"></div><b>TOTAL: Rp ' + item.biaya.toLocaleString('id-ID') + '</b><br><div class="line"></div><div class="text-center">Terima Kasih!</div></body></html>');
     win.document.close();
     setTimeout(function(){ win.print(); win.close(); }, 250);
   }
 
-  // JAMINAN BEBAS ERROR: Langsung membuka layout cetak PDF resmi untuk lembar 'Laporan' Anda
   function bukaLaporanBulanan() {
-    var spreadsheetId = "1q5l7KVYd8fxtXeVzOc3kV3ekuwQ2iSyFqgZaEk0NPkE";
-    var gidLaporan = "1114515535"; 
-    
-    var urlPrint = "https://docs.google.com/spreadsheets/d/" + spreadsheetId + "/export?exportFormat=pdf&format=pdf" + 
-                   "&size=A4" +             // Kertas A4
-                   "&portrait=true" +       // Posisi Tegak (Portrait)
-                   "&fitw=true" +           // Pas lebar halaman
-                   "&gridlines=true" +      // Memunculkan garis pembatas tabel agar rapi saat dicetak
-                   "&printtitle=false" + 
-                   "&sheetnames=false" + 
-                   "&fzr=false" + 
-                   "&gid=" + gidLaporan;
-    
-    window.open(urlPrint, "_blank");
+    var URL_SPREADSHEET = "https://docs.google.com/spreadsheets/d/1q5l7KVYd8fxtXeVzOc3kV3ekuwQ2iSyFqgZaEk0NPkE/edit#gid=1114515535";
+    window.open(URL_SPREADSHEET, "_blank");
   }
 
   window.onload = load;
