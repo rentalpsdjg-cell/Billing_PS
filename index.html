@@ -2,52 +2,102 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>BILLING PS DODI JAYA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { background-color: #f8fafc; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { 
+            background-color: #f1f5f9; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            -webkit-user-select: none; /* Mencegah teks terpilih tidak sengaja di HP */
+            user-select: none;
+        }
         .navbar-custom { background-color: #0f172a; color: white; }
-        .card-ps { border: none; border-radius: 12px; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); transition: transform 0.2s; background: white; }
-        .card-ps:hover { transform: translateY(-2px); }
-        .badge-status { font-size: 0.85rem; padding: 6px 12px; border-radius: 30px; }
+        
+        /* Desain kartu khusus HP */
+        .card-ps { 
+            border: none; 
+            border-radius: 16px; 
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
+            background: white; 
+            padding: 16px !important;
+        }
+        
+        /* Badge Status Lebih Terbaca */
+        .badge-status { 
+            font-size: 0.9rem; 
+            padding: 8px 16px; 
+            border-radius: 50px; 
+            font-weight: 600;
+        }
         .bg-tersedia { background-color: #10b981; color: white; }
         .bg-main { background-color: #ef4444; color: white; }
-        .section-jajanan { background-color: #fffbeb; border: 1px dashed #f59e0b; border-radius: 8px; padding: 12px; }
-        .btn-start { background-color: #1e293b; border: none; color: white; }
-        .btn-start:hover { background-color: #334155; color: white; }
-        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.85); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+        
+        /* Kontainer Jajanan Ringkas */
+        .section-jajanan { 
+            background-color: #fef3c7; 
+            border: 1px solid #f59e0b; 
+            border-radius: 12px; 
+            padding: 12px; 
+        }
+        
+        /* Ukuran Input & Tombol Khusus Layar Sentuh HP */
+        .form-select, .form-control {
+            height: 45px; /* Tinggi ideal untuk ditekan jari tangan */
+            font-size: 1rem !important;
+            border-radius: 10px;
+        }
+        .btn-custom {
+            height: 45px;
+            font-size: 1rem;
+            font-weight: bold;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .btn-start { background-color: #1e293b; color: white; border: none; }
+        .btn-start:hover { background-color: #334155; }
+        
+        /* Spinner Loading Layar Penuh */
+        .loading-overlay { 
+            position: fixed; 
+            top: 0; left: 0; width: 100%; height: 100%; 
+            background: rgba(255,255,255,0.9); 
+            display: flex; justify-content: center; align-items: center; 
+            z-index: 9999; 
+        }
     </style>
 </head>
 <body>
 
     <div id="loading" class="loading-overlay">
-        <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;"></div>
+        <div class="text-center">
+            <div class="spinner-border text-primary mb-2" role="status" style="width: 3rem; height: 3rem;"></div>
+            <div class="text-muted fw-bold">Memproses Data...</div>
+        </div>
     </div>
 
-    <nav class="navbar navbar-custom py-3 shadow-sm mb-4">
-        <div class="container-fluid px-4 d-flex justify-content-between align-items-center">
-            <h4 class="m-0 fw-bold"><i class="fa-solid fa-gamepad me-2 text-info"></i> BILLING PS DODI JAYA</h4>
-            <div>
-                <button class="btn btn-outline-light btn-sm me-2" onclick="alert('Fitur ini otomatis mencetak dari Sheet Laporan Anda.')"><i class="fa-solid fa-print me-1"></i> CETAK BULANAN</button>
-                <button class="btn btn-info btn-sm text-white fw-bold" onclick="muatData()"><i class="fa-solid fa-rotate me-1"></i> REFRESH DATA</button>
-            </div>
+    <nav class="navbar navbar-custom py-2 shadow-sm sticky-top">
+        <div class="container-fluid px-3 d-flex justify-content-between align-items-center">
+            <span class="navbar-brand m-0 fw-bold text-white fs-6">
+                <i class="fa-solid fa-gamepad me-1 text-info"></i> BILLING DODI JAYA
+            </span>
+            <button class="btn btn-info btn-sm text-white fw-bold px-3 py-1" style="border-radius: 8px;" onclick="muatData()">
+                <i class="fa-solid fa-rotate"></i>
+            </button>
         </div>
     </nav>
 
-    <div class="container-fluid px-4">
-        <div class="row g-4" id="container-ps">
-            </div>
+    <div class="container-fluid px-3 mt-3 mb-5">
+        <div class="row g-3" id="container-ps"></div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // =========================================================================
-        // URL WEB APP GOOGLE APPS SCRIPT ANDA SUDAH TERPASANG DI BAWAH INI
-        // =========================================================================
         const API_URL = "https://script.google.com/macros/s/AKfycbwG6ziAwlZpX3b0bvOZJkTn_od5RLOYFXVxLAzLkBLHGN2Yvy5oCjWwhzp6iUcnmrHA/exec";
 
         let menuJajananGlobal = [];
@@ -58,15 +108,12 @@
         });
 
         function toggleLoading(show) {
-            if (show) $('#loading').fadeIn(150);
-            else $('#loading').fadeOut(150);
+            if (show) $('#loading').fadeIn(100);
+            else $('#loading').fadeOut(100);
         }
 
-        // Ambil data terbaru dari Google Sheets via API JSONP
         function muatData() {
             toggleLoading(true);
-            
-            // Bersihkan interval timer lama agar tidak menumpuk memori
             Object.keys(timerIntervals).forEach(key => clearInterval(timerIntervals[key]));
             timerIntervals = {};
 
@@ -78,7 +125,7 @@
                 success: function(response) {
                     toggleLoading(false);
                     if (response.error) {
-                        alert("Error dari server: " + response.error);
+                        alert("Error: " + response.error);
                         return;
                     }
                     menuJajananGlobal = response.menu;
@@ -86,12 +133,11 @@
                 },
                 error: function() {
                     toggleLoading(false);
-                    alert("Gagal terhubung ke Google Apps Script. Periksa koneksi internet atau status Deployment.");
+                    alert("Koneksi internet bermasalah atau server sibuk.");
                 }
             });
         }
 
-        // Fungsi membuat elemen visual kartu PS secara dinamis
         function renderDashboard(dataPS) {
             const container = $('#container-ps');
             container.empty();
@@ -101,81 +147,73 @@
                 const badgeClass = isMain ? "bg-main" : "bg-tersedia";
                 const statusLabel = isMain ? ps.status : "Tersedia";
 
-                // Generate opsi dropdown jajanan dari Sheet 'MenuJajanan'
-                let opsiJajanan = `<option value="">-- Pilih Jajanan Kasir --</option>`;
+                let opsiJajanan = `<option value="">-- Tambah Jajanan --</option>`;
                 menuJajananGlobal.forEach(item => {
                     opsiJajanan += `<option value="${item[1]}" data-nama="${item[0]}">${item[0]} (Rp${Number(item[1]).toLocaleString('id-ID')})</option>`;
                 });
 
-                // Cek rincian jajanan dari string kolom Selesai (E)
-                let textJajanan = "Belum jajan";
+                let textJajanan = "Belum ada jajanan";
                 let jajanBadgeClass = "text-danger text-decoration-underline";
                 if (ps.selesai && ps.selesai.includes(" | Jrn: ")) {
                     textJajanan = ps.selesai.split(" | Jrn: ")[1];
                     jajanBadgeClass = "text-success fw-bold";
                 }
 
-                // Ambil jam selesai asli murni (sebelum dipisah string jajanan)
                 let jamSelesaiMurni = ps.selesai ? ps.selesai.split(" | ")[0] : "";
 
                 let cardHtml = `
                 <div class="col-12 col-md-6 col-lg-4">
-                    <div class="card card-ps p-3">
+                    <div class="card card-ps">
                         <div class="d-flex justify-content-between align-items-center mb-3">
-                            <h5 class="fw-bold m-0 text-secondary"><i class="fa-solid fa-tv me-1 text-primary"></i> ${ps.noPS}</h5>
-                            <span class="badge badge-status ${badgeClass}">
-                                <i class="fa-solid ${isMain ? 'fa-gamepad' : 'fa-circle-check'} me-1"></i> ${statusLabel}
-                            </span>
+                            <h4 class="fw-bold m-0 text-dark"><i class="fa-solid fa-tv me-1 text-primary"></i> ${ps.noPS}</h4>
+                            <span class="badge badge-status ${badgeClass}">${statusLabel}</span>
                         </div>
 
-                        <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted mb-1">Pilih Mesin / Layanan:</label>
-                            <select class="form-select form-select-sm" id="tipe-${ps.noPS}" ${isMain ? 'disabled' : ''}>
-                                <option value="PLAYSTATION 3" ${ps.status.includes("PS3") ? "selected" : ""}>PLAYSTATION 3 (Rp5.000/Jam)</option>
-                                <option value="PLAYSTATION 4" ${ps.status.includes("PS4") ? "selected" : ""}>PLAYSTATION 4 (Rp10.000/Jam)</option>
+                        <div class="mb-2">
+                            <select class="form-select" id="tipe-${ps.noPS}" ${isMain ? 'disabled' : ''}>
+                                <option value="PS3" ${ps.status.includes("PS3") ? "selected" : ""}>PLAYSTATION 3 (Rp5.000/j)</option>
+                                <option value="PS4" ${ps.status.includes("PS4") ? "selected" : ""}>PLAYSTATION 4 (Rp10.000/j)</option>
                             </select>
                         </div>
 
                         <div class="mb-3">
-                            <label class="form-label small fw-bold text-muted mb-1">Set Jam Main:</label>
                             ${isMain ? `
-                                <div class="p-2 border bg-light rounded text-center">
-                                    <div class="text-muted small mb-1">Mulai: <b>${ps.mulai}</b> | Selesai: <b>${jamSelesaiMurni}</b></div>
-                                    <div class="fw-bold text-danger fs-5" id="timer-${ps.noPS}">Menghitung sisa...</div>
+                                <div class="p-2 border bg-light rounded-3 text-center">
+                                    <div class="text-muted small">Mulai: <b>${ps.mulai}</b> | Selesai: <b>${jamSelesaiMurni}</b></div>
+                                    <div class="fw-bold text-danger fs-5 mt-1" id="timer-${ps.noPS}">00:00:00</div>
                                 </div>
                             ` : `
-                                <input type="number" class="form-control form-control-sm" id="jam-${ps.noPS}" placeholder="Berapa jam? misal: 2" step="0.5" min="0.5">
+                                <input type="number" class="form-control" id="jam-${ps.noPS}" placeholder="Durasi Main (Jam). Contoh: 2" step="0.5" min="0.5" inputmode="decimal">
                             `}
                         </div>
 
-                        <div class="d-grid gap-2 mb-3">
+                        <div class="mb-3">
                             ${isMain ? `
-                                <button class="btn btn-danger btn-sm fw-bold py-2 shadow-sm" onclick="stopBilling('${ps.noPS}', ${ps.biaya})">
-                                    <i class="fa-solid fa-stopwatch me-1"></i> STOP BILLING (Rp${ps.biaya.toLocaleString('id-ID')})
+                                <button class="btn btn-danger btn-custom w-100 shadow-sm" onclick="stopBilling('${ps.noPS}', ${ps.biaya})">
+                                    <i class="fa-solid fa-stopwatch me-2"></i> STOP (Rp${ps.biaya.toLocaleString('id-ID')})
                                 </button>
                             ` : `
-                                <button class="btn btn-start btn-sm fw-bold py-2 shadow-sm" onclick="startBilling('${ps.noPS}')">
-                                    START BILLING
+                                <button class="btn btn-start btn-custom w-100 shadow-sm" onclick="startBilling('${ps.noPS}')">
+                                    <i class="fa-solid fa-play me-2"></i> START BILLING
                                 </button>
                             `}
                         </div>
 
-                        <div class="section-jajanan shadow-inner">
-                            <label class="form-label small fw-bold text-warning-emphasis mb-1"><i class="fa-solid fa-cookie-bite me-1"></i> Menu Jajanan Kasir:</label>
+                        <div class="section-jajanan">
                             <div class="row g-2">
                                 <div class="col-8">
                                     <select class="form-select form-select-sm" id="jajan-${ps.noPS}" ${!isMain ? 'disabled' : ''}>
                                         ${opsiJajanan}
                                     </select>
                                 </div>
-                                <div class="col-4 d-grid">
-                                    <button class="btn btn-warning btn-sm fw-bold text-white" onclick="beliJajanan('${ps.noPS}')" ${!isMain ? 'disabled' : ''}>
-                                        + Masuk
+                                <div class="col-4">
+                                    <button class="btn btn-warning btn-sm text-white fw-bold w-100 h-100 rounded-3" onclick="beliJajanan('${ps.noPS}')" ${!isMain ? 'disabled' : ''}>
+                                        <i class="fa-solid fa-plus"></i>
                                     </button>
                                 </div>
                             </div>
-                            <div class="mt-2 small text-muted">
-                                <span><b>Item:</b> <span class="${jajanBadgeClass}">${textJajanan}</span></span>
+                            <div class="mt-2 small text-dark" style="font-size: 0.85rem;">
+                                <b>Item Belanja:</b> <span class="${jajanBadgeClass}">${textJajanan}</span>
                             </div>
                         </div>
 
@@ -184,14 +222,12 @@
 
                 container.append(cardHtml);
 
-                // Jalankan jam hitung mundur aktif jika unit sedang dipakai main
                 if (isMain && jamSelesaiMurni) {
                     initLiveTimer(ps.noPS, jamSelesaiMurni);
                 }
             });
         }
 
-        // Mesin hitung mundur real-time
         function initLiveTimer(id, jamSelesaiStr) {
             function hitung() {
                 const sekarang = new Date();
@@ -200,7 +236,6 @@
                 let target = new Date();
                 target.setHours(parseInt(partWaktu[0], 10), parseInt(partWaktu[1], 10), 0, 0);
 
-                // Mengatasi jika durasi main melewati tengah malam
                 if (target < sekarang) {
                     target.setDate(target.getDate() + 1);
                 }
@@ -208,7 +243,7 @@
                 const selisih = target - sekarang;
 
                 if (selisih <= 0) {
-                    $(`#timer-${id}`).html(`<span class="badge bg-danger p-2 text-white">🛑 WAKTU HABIS!</span>`);
+                    $(`#timer-${id}`).html(`<span class="badge bg-danger p-2 w-100">🛑 WAKTU HABIS!</span>`);
                     clearInterval(timerIntervals[id]);
                     return;
                 }
@@ -224,13 +259,12 @@
             timerIntervals[id] = setInterval(hitung, 1000);
         }
 
-        // Jalankan perintah Mulai Billing ke Google Sheets
         function startBilling(id) {
             const jam = $(`#jam-${id}`).val();
             const tipe = $(`#tipe-${id}`).val();
 
             if (!jam || parseFloat(jam) <= 0) {
-                alert("Harap isi durasi jam main terlebih dahulu!");
+                alert("Harap isi angka durasi bermain!");
                 return;
             }
 
@@ -239,12 +273,7 @@
                 url: API_URL,
                 jsonp: "callback",
                 dataType: "jsonp",
-                data: {
-                    action: "mulaiMain",
-                    id: id,
-                    jam: jam,
-                    tipe: tipe
-                },
+                data: { action: "mulaiMain", id: id, jam: jam, tipe: tipe },
                 success: function(res) {
                     if (res.success) muatData();
                     else { alert("Gagal: " + res.error); toggleLoading(false); }
@@ -252,14 +281,13 @@
             });
         }
 
-        // Tambahkan item jajanan ke billing PS yang aktif
         function beliJajanan(id) {
             const selectOption = $(`#jajan-${id} option:selected`);
             const nama = selectOption.data('nama');
             const harga = selectOption.val();
 
             if (!harga) {
-                alert("Pilih jenis jajanan kasir!");
+                alert("Pilih jajanan dulu!");
                 return;
             }
 
@@ -268,12 +296,7 @@
                 url: API_URL,
                 jsonp: "callback",
                 dataType: "jsonp",
-                data: {
-                    action: "tambahJajanan",
-                    id: id,
-                    nama: nama,
-                    harga: harga
-                },
+                data: { action: "tambahJajanan", id: id, nama: nama, harga: harga },
                 success: function(res) {
                     if (res.success) muatData();
                     else { alert("Gagal: " + res.error); toggleLoading(false); }
@@ -281,9 +304,8 @@
             });
         }
 
-        // Hentikan billing, catat total uang ke laporan, dan kosongkan unit PS
         function stopBilling(id, totalBiaya) {
-            if (!confirm(`Konfirmasi pembayaran untuk ${id}.\nTotal tagihan billing + jajanan: Rp${totalBiaya.toLocaleString('id-ID')}\n\nLanjutkan untuk cetak arsip laporan dan reset status?`)) {
+            if (!confirm(`Total Tagihan ${id}: Rp${totalBiaya.toLocaleString('id-ID')}\n\nSimpan nota ke Excel Laporan & Reset?`)) {
                 return;
             }
 
