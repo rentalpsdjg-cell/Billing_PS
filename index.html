@@ -12,7 +12,7 @@
     .btn-dark { background-color: #2c3e50; color: white; }
     .btn-dark:hover { background-color: #1a252f; }
     .btn-success { background-color: #2ecc71; color: white; width: 100%; margin-top: 5px; }
-    .btn-danger { background-color: #e74c3c; color: white; width: 100%; margin-bottom: 8px; }
+    .btn-danger { background-color: #e74c3c; color: white; width: 100%; margin-top: 5px; margin-bottom: 8px; }
     .btn-warning { background-color: #f1c40f; color: #333; width: 100%; margin-top: 5px; font-weight: bold; }
     .row { display: flex; flex-wrap: wrap; margin: 0 -10px; }
     .col { flex: 0 0 33.333%; padding: 0 10px; margin-bottom: 20px; }
@@ -75,7 +75,7 @@
     },
     getAppData: function() { this.panggilServer("?action=getAppData"); },
     mulaiMain: function(id, jam, tipe) { this.panggilServer(`?action=mulaiMain&id=${id}&jam=${jam}&tipe=${tipe}`); },
-    tambahJajananKeSheet: function(id, nama, harga) { this.panggilServer(`?action=tambahJajanan&id=${id}&nama=${nama}&harga=${harga}`); },
+    tambahJajananKeSheet: function(id, nama, harga) { this.panggilServer(`?action=tambahJajanan&id=${id}&nama=${encodeURIComponent(nama)}&harga=${harga}`); },
     resetPS: function(id) { this.panggilServer(`?action=resetPS&id=${id}`); }
   };
 
@@ -108,10 +108,13 @@
     dataPSGlobal.forEach(item => {
       const isMain = item.status.indexOf("🔴 MAIN") !== -1 || item.status.indexOf("🔴 SEWA") !== -1;
       
+      // GENERATOR LIST MENU DROPDOWN DARI GOOGLE SHEETS
       let options = `<option value="">-- Pilih Jajanan Kasir --</option>`;
-      menuGlobal.forEach((m, idx) => {
-        if(m[0]) {
-          options += `<option value="${idx}" data-nama="${m[0]}" data-harga="${m[1]}">${m[0]} (Rp ${parseInt(m[1]).toLocaleString('id-ID')})</option>`;
+      menuGlobal.forEach((m) => {
+        if(m && m[0]) {
+          let namaJajan = m[0].toString();
+          let hargaJajan = parseFloat(m[1]) || 0;
+          options += `<option value="${namaJajan}" data-harga="${hargaJajan}">${namaJajan} (Rp ${hargaJajan.toLocaleString('id-ID')})</option>`;
         }
       });
 
@@ -174,14 +177,12 @@
       col.innerHTML = cardHTML;
       container.appendChild(col);
 
-      // Pemicu hitung mundur pintar bebas eror 1899
       if (isMain && jamSelesaiTampil) {
         runTimerPintar(item.noPS, jamSelesaiTampil);
       }
     });
   }
 
-  // JEMBATAN PARSING WAKTU ANTI 1899
   function runTimerPintar(id, jamSelesaiStr) {
     try {
       const bagian = jamSelesaiStr.trim().split(":");
@@ -195,7 +196,6 @@
         const target = new Date();
         target.setHours(targetJam, targetMenit, 0, 0);
         
-        // Jika jam selesai sudah lewat melintasi tengah malam, geser ke hari esok
         if (target.getTime() < sekarang.getTime() && (sekarang.getTime() - target.getTime() > 12 * 60 * 60 * 1000)) {
           target.setDate(target.getDate() + 1);
         }
@@ -236,8 +236,11 @@
     const selectEl = document.getElementById('m-' + id);
     if (!selectEl.value) return alert("Silakan pilih menu makanan/minuman!");
     const opt = selectEl.options[selectEl.selectedIndex];
+    const namaJajanan = selectEl.value;
+    const hargaJajanan = opt.getAttribute('data-harga');
+    
     document.getElementById('content').innerHTML = '<div class="loading-screen"><div class="spinner"></div><h3>Memasukkan Jajanan...</h3></div>';
-    SistemKasir.withSuccessHandler(load).withFailureHandler(tanganiError).tambahJajananKeSheet(id, opt.getAttribute('data-nama'), opt.getAttribute('data-harga'));
+    SistemKasir.withSuccessHandler(load).withFailureHandler(tanganiError).tambahJajananKeSheet(id, namaJajanan, hargaJajanan);
   }
 
   function stop(id) {
