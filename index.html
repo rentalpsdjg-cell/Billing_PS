@@ -9,73 +9,33 @@
         body { 
             background-color: #f1f5f9; 
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            -webkit-user-select: none;
-            user-select: none;
             padding-bottom: 40px;
         }
         .navbar-custom { background-color: #0f172a; color: white; }
-        
-        /* Desain Card khusus Jari Tangan Kasir HP Android */
         .card-ps { 
-            border: none; 
-            border-radius: 16px; 
+            border: none; border-radius: 16px; 
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
-            background: white; 
-            padding: 16px !important;
-            margin-bottom: 8px;
+            background: white; padding: 16px !important; margin-bottom: 8px;
         }
-        .badge-status { 
-            font-size: 0.85rem; 
-            padding: 6px 14px; 
-            border-radius: 50px; 
-            font-weight: 600;
-        }
+        .badge-status { font-size: 0.85rem; padding: 6px 14px; border-radius: 50px; font-weight: 600; }
         .bg-tersedia { background-color: #10b981; color: white; }
         .bg-main { background-color: #ef4444; color: white; }
-        
-        .section-jajanan { 
-            background-color: #fffbeb; 
-            border: 1px dashed #f59e0b; 
-            border-radius: 12px; 
-            padding: 12px; 
-        }
-        .form-select, .form-control {
-            height: 48px; 
-            font-size: 1rem !important;
-            border-radius: 10px;
-        }
-        .btn-custom {
-            height: 48px;
-            font-size: 1rem;
-            font-weight: bold;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
+        .section-jajanan { background-color: #fffbeb; border: 1px dashed #f59e0b; border-radius: 12px; padding: 12px; }
+        .form-select, .form-control { height: 48px; font-size: 1rem !important; border-radius: 10px; }
+        .btn-custom { height: 48px; font-size: 1rem; font-weight: bold; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
         .btn-start { background-color: #1e293b; color: white; border: none; }
-        
-        /* Indikator Loading Ringan */
-        .loading-overlay { 
-            position: fixed; 
-            top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(255,255,255,0.95); 
-            display: flex; justify-content: center; align-items: center; 
-            z-index: 9999; 
-        }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; }
 
-        /* TATA LETAK CETAK PRINTER (Sembunyikan UI Aplikasi saat Print) */
+        /* DEKORASI KHUSUS PRINTER THERMAL MINI 58mm / 80mm */
         @media print {
             body * { visibility: hidden; }
             #area-cetak, #area-cetak * { visibility: visible; }
             #area-cetak { 
-                position: absolute; 
-                left: 0; top: 0; 
-                width: 100%; 
+                position: absolute; left: 0; top: 0; 
+                width: 58mm; /* Lebar standar thermal mini */
                 font-family: 'Courier New', Courier, monospace; 
-                color: #000;
-                padding: 10px;
-                font-size: 12px;
+                color: #000; padding: 0; margin: 0;
+                font-size: 11px; line-height: 1.2;
             }
             .no-print { display: none !important; }
         }
@@ -88,18 +48,16 @@
     <div id="loading" class="loading-overlay">
         <div class="text-center">
             <div class="spinner-border text-primary mb-2" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
-            <div class="text-muted small fw-bold">Sinkronisasi Kasir Dodi Jaya...</div>
+            <div class="text-muted small fw-bold">Menghubungkan ke Kasir...</div>
         </div>
     </div>
 
     <nav class="navbar navbar-custom py-2 shadow-sm sticky-top no-print">
         <div class="container-fluid px-3 d-flex justify-content-between align-items-center">
-            <span class="navbar-brand m-0 fw-bold text-white fs-6">
-                🎮 BILLING DODI JAYA v2
-            </span>
+            <span class="navbar-brand m-0 fw-bold text-white fs-6">🎮 BILLING DODI JAYA</span>
             <div>
-                <button class="btn btn-warning btn-sm fw-bold me-1 text-dark shadow-sm" onclick="cetakLaporanBerjalan()">📊 OMSET</button>
-                <button class="btn btn-info btn-sm text-white fw-bold shadow-sm" onclick="muatData()">🔄 REFRESH</button>
+                <button class="btn btn-warning btn-sm fw-bold me-1 text-dark" onclick="cetakLaporanBulanan()">📊 PRINT REKAP</button>
+                <button class="btn btn-info btn-sm text-white fw-bold" onclick="muatData()">🔄 REFRESH</button>
             </div>
         </div>
     </nav>
@@ -109,43 +67,34 @@
     </div>
 
     <script>
-        // Sambungan Otomatis ke Script Google Anda
         const API_URL = "https://script.google.com/macros/s/AKfycbwG6ziAwlZpX3b0bvOZJkTn_od5RLOYFXVxLAzLkBLHGN2Yvy5oCjWwhzp6iUcnmrHA/exec";
-
+        
         let menuJajananGlobal = [];
         let timerIntervals = {};
         let dataPSGlobal = [];
 
-        // Inisialisasi murni saat aplikasi dibuka
         document.addEventListener("DOMContentLoaded", function() {
             muatData();
         });
 
         function toggleLoading(show) {
-            const loader = document.getElementById('loading');
-            if (show) loader.style.display = 'flex';
-            else loader.style.display = 'none';
+            document.getElementById('loading').style.display = show ? 'flex' : 'none';
         }
 
-        // Ambil data anti-stuck & responsif di Android
         function muatData() {
             toggleLoading(true);
             Object.keys(timerIntervals).forEach(key => clearInterval(timerIntervals[key]));
             timerIntervals = {};
 
-            const callbackName = 'jsonp_load_' + Math.round(100000 * Math.random());
+            const callbackName = 'jsonp_' + Date.now() + Math.round(100 * Math.random());
             window[callbackName] = function(response) {
                 toggleLoading(false);
-                if (response.error) {
-                    alert("Error: " + response.error);
-                    return;
-                }
+                if (response.error) { alert("Error: " + response.error); return; }
                 menuJajananGlobal = response.menu || [];
                 dataPSGlobal = response.ps || [];
                 renderDashboard(dataPSGlobal);
-                
+                cleanupScript(scriptId);
                 delete window[callbackName];
-                document.getElementById(scriptId).remove();
             };
 
             const scriptId = 'scr_load';
@@ -179,14 +128,12 @@
                             <h4 class="fw-bold m-0 text-dark">📺 ${ps.noPS}</h4>
                             <span class="badge badge-status ${badgeClass}">${statusLabel}</span>
                         </div>
-
                         <div class="mb-2">
                             <select class="form-select" id="tipe-${ps.noPS}" ${isMain ? 'disabled' : ''}>
                                 <option value="PS3" ${ps.status.includes("PS3") ? "selected" : ""}>PLAYSTATION 3 (Rp5.000/j)</option>
                                 <option value="PS4" ${ps.status.includes("PS4") ? "selected" : ""}>PLAYSTATION 4 (Rp10.000/j)</option>
                             </select>
                         </div>
-
                         <div class="mb-3">
                             ${isMain ? `
                                 <div class="p-2 border bg-light rounded-3 text-center">
@@ -194,57 +141,39 @@
                                     <div class="fw-bold text-danger fs-5 mt-1" id="timer-${ps.noPS}">00:00:00</div>
                                 </div>
                             ` : `
-                                <input type="number" class="form-control" id="jam-${ps.noPS}" placeholder="Berapa Jam? Misal: 2" step="0.5" min="0.5" inputmode="decimal">
+                                <input type="number" class="form-control" id="jam-${ps.noPS}" placeholder="Berapa jam? misal: 2" step="0.5" min="0.5" inputmode="decimal">
                             `}
                         </div>
-
                         <div class="mb-3">
                             ${isMain ? `
                                 <div class="row g-2">
                                     <div class="col-8">
-                                        <button class="btn btn-danger btn-custom w-100 shadow-sm" onclick="stopBilling('${ps.noPS}', ${ps.biaya}, '${ps.mulai}', '${ps.selesai}', '${textJajanan}')">
+                                        <button class="btn btn-danger btn-custom w-100" onclick="stopBilling('${ps.noPS}', ${ps.biaya}, '${ps.mulai}', '${ps.selesai}', '${textJajanan}')">
                                             🛑 STOP (Rp${ps.biaya.toLocaleString('id-ID')})
                                         </button>
                                     </div>
                                     <div class="col-4">
-                                        <button class="btn btn-dark btn-custom w-100 shadow-sm" onclick="cetakKuponSatuan('${ps.noPS}', '${ps.status}', '${ps.mulai}', '${ps.selesai}', ${ps.biaya}, '${textJajanan}')">
-                                            🖨️ KUPON
+                                        <button class="btn btn-dark btn-custom w-100" onclick="buatKuponThermal('${ps.noPS}', 'KUPON NOTA', '${ps.mulai}', '${ps.selesai}', ${ps.biaya}, '${textJajanan}')">
+                                            🖨️
                                         </button>
                                     </div>
                                 </div>
                             ` : `
-                                <button class="btn btn-start btn-custom w-100 shadow-sm" onclick="startBilling('${ps.noPS}')">
-                                    ▶️ START BILLING
-                                </button>
+                                <button class="btn btn-start btn-custom w-100" onclick="startBilling('${ps.noPS}')">START BILLING</button>
                             `}
                         </div>
-
                         <div class="section-jajanan">
                             <div class="row g-2">
-                                <div class="col-8">
-                                    <select class="form-select form-select-sm" id="jajan-${ps.noPS}" ${!isMain ? 'disabled' : ''}>
-                                        ${opsiJajanan}
-                                    </select>
-                                </div>
-                                <div class="col-4">
-                                    <button class="btn btn-warning btn-sm text-white fw-bold w-100 h-100 rounded-3" onclick="beliJajanan('${ps.noPS}')" ${!isMain ? 'disabled' : ''}>
-                                        ➕
-                                    </button>
-                                </div>
+                                <div class="col-8"><select class="form-select form-select-sm" id="jajan-${ps.noPS}" ${!isMain ? 'disabled' : ''}>${opsiJajanan}</select></div>
+                                <div class="col-4"><button class="btn btn-warning btn-sm text-white fw-bold w-100 h-100 rounded-3" onclick="beliJajanan('${ps.noPS}')" ${!isMain ? 'disabled' : ''}>➕</button></div>
                             </div>
-                            <div class="mt-2 text-dark" style="font-size: 0.85rem;">
-                                <b>Jajanan:</b> <span class="${jajanBadgeClass}">${textJajanan}</span>
-                            </div>
+                            <div class="mt-2 text-dark" style="font-size: 0.85rem;"><b>Jajanan:</b> <span class="${jajanBadgeClass}">${textJajanan}</span></div>
                         </div>
-
                     </div>
                 </div>`;
-
                 container.insertAdjacentHTML('beforeend', cardHtml);
 
-                if (isMain && ps.selesai) {
-                    initLiveTimer(ps.noPS, ps.selesai);
-                }
+                if (isMain && ps.selesai) { initLiveTimer(ps.noPS, ps.selesai); }
             });
         }
 
@@ -254,24 +183,15 @@
                 const partWaktu = jamSelesaiStr.split(":");
                 let target = new Date();
                 target.setHours(parseInt(partWaktu[0], 10), parseInt(partWaktu[1], 10), 0, 0);
-
                 if (target < sekarang) target.setDate(target.getDate() + 1);
                 const selisih = target - sekarang;
-
                 const elemenTimer = document.getElementById(`timer-${id}`);
                 if (!elemenTimer) return;
-
-                if (selisih <= 0) {
-                    elemenTimer.innerHTML = `<span class="badge bg-danger p-2 w-100 animate-pulse">🛑 WAKTU HABIS!</span>`;
-                    clearInterval(timerIntervals[id]);
-                    return;
-                }
-
+                if (selisih <= 0) { elemenTimer.innerHTML = `🛑 WAKTU HABIS!`; clearInterval(timerIntervals[id]); return; }
                 const jam = Math.floor(selisih / (1000 * 60 * 60));
                 const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60));
                 const detik = Math.floor((selisih % (1000 * 60)) / 1000);
-
-                elemenTimer.innerHTML = `⏳ Sisa: ${jam.toString().padStart(2,'0')}:${menit.toString().padStart(2,'0')}:${detik.toString().padStart(2,'0')}`;
+                elemenTimer.innerHTML = `⏳ ${jam.toString().padStart(2,'0')}:${menit.toString().padStart(2,'0')}:${detik.toString().padStart(2,'0')}`;
             }
             hitung();
             timerIntervals[id] = setInterval(hitung, 1000);
@@ -279,28 +199,20 @@
 
         function jalankanAksiJSONP(dataParameter) {
             toggleLoading(true);
-            const callbackName = 'jsonp_action_' + Math.round(100000 * Math.random());
+            const callbackName = 'act_' + Date.now() + Math.round(100 * Math.random());
             
             window[callbackName] = function(res) {
-                if (res.success) {
-                    muatData();
-                } else { 
-                    alert("Gagal: " + res.error); 
-                    toggleLoading(false); 
-                }
+                if (res.success) { muatData(); } else { alert("Gagal: " + res.error); toggleLoading(false); }
+                cleanupScript(scriptId);
                 delete window[callbackName];
-                document.getElementById(scriptId).remove();
             };
 
             const scriptId = 'scr_action';
+            let params = "";
+            Object.keys(dataParameter).forEach(key => { params += `&${key}=${encodeURIComponent(dataParameter[key])}`; });
+
             const script = document.createElement('script');
             script.id = scriptId;
-            
-            let params = "";
-            Object.keys(dataParameter).forEach(key => {
-                params += `&${key}=${encodeURIComponent(dataParameter[key])}`;
-            });
-
             script.src = `${API_URL}?callback=${callbackName}${params}`;
             document.body.appendChild(script);
         }
@@ -308,10 +220,7 @@
         function startBilling(id) {
             const jam = document.getElementById(`jam-${id}`).value;
             const tipe = document.getElementById(`tipe-${id}`).value;
-            if (!jam || parseFloat(jam) <= 0) {
-                alert("Masukkan durasi bermain!");
-                return;
-            }
+            if (!jam || parseFloat(jam) <= 0) { alert("Isi durasi bermain!"); return; }
             jalankanAksiJSONP({ action: "mulaiMain", id: id, jam: jam, tipe: tipe });
         }
 
@@ -320,60 +229,58 @@
             const opt = selectEl.options[selectEl.selectedIndex];
             const nama = opt.getAttribute('data-nama');
             const harga = selectEl.value;
-            if (!harga) {
-                alert("Pilih menu jajanan!");
-                return;
-            }
+            if (!harga) { alert("Pilih jajanan!"); return; }
             jalankanAksiJSONP({ action: "tambahJajanan", id: id, nama: nama, harga: harga });
         }
 
         function stopBilling(id, totalBiaya, mulai, selesai, jajanan) {
-            if (!confirm(`Total Tagihan ${id}: Rp${totalBiaya.toLocaleString('id-ID')}\n\nCetak Kupon & Kosongkan Unit?`)) {
-                return;
-            }
-            cetakKuponSatuan(id, "NOTA SELESAI", mulai, selesai, totalBiaya, jajanan);
+            if (!confirm(`STOP ${id}?\nTotal: Rp${totalBiaya.toLocaleString('id-ID')}\n\nNota otomatis dicetak.`)) return;
+            buatKuponThermal(id, "STRUK SELESAI", mulai, selesai, totalBiaya, jajanan);
             jalankanAksiJSONP({ action: "resetPS", id: id });
         }
 
-        // ================= KUMPULAN LOGIK PRINT THERMAL/KERTAS ANDROID =================
-        
-        function cetakKuponSatuan(id, judul, mulai, selesai, total, jajanan) {
+        function cleanupScript(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        // ================= STRUK UKURAN PRINTER THERMAL MINI =================
+        function buatKuponThermal(id, judul, mulai, selesai, total, jajanan) {
             const area = document.getElementById('area-cetak');
-            const waktuSkrg = new Date().toLocaleString('id-ID');
+            const tgl = new Date().toLocaleDateString('id-ID') + " " + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
             
             area.innerHTML = `
-                <div style="text-align: center; font-size: 15px; font-weight: bold;">RENTAL PS DODI JAYA</div>
-                <div style="text-align: center; font-size: 11px; margin-bottom: 5px;">${judul}</div>
-                <div style="border-bottom: 1px dashed #000; margin-bottom: 5px;"></div>
-                <table style="width: 100%; font-size: 11px;">
-                    <tr><td>Kasir:</td><td style="text-align: right;">${waktuSkrg}</td></tr>
-                    <tr><td><b>Nomor Unit:</b></td><td style="text-align: right;"><b>${id}</b></td></tr>
-                    <tr><td>Jam Main:</td><td style="text-align: right;">${mulai} - ${selisihSelesai(selesai)}</td></tr>
+                <div style="text-align: center; font-weight: bold; font-size: 12px;">PS DODI JAYA</div>
+                <div style="text-align: center; font-size: 10px;">${judul}</div>
+                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                <table style="width: 100%; font-size: 10px;">
+                    <tr><td>Tgl :</td><td style="text-align: right;">${tgl}</td></tr>
+                    <tr><td>Unit:</td><td style="text-align: right; font-weight: bold;">${id}</td></tr>
+                    <tr><td>Jam :</td><td style="text-align: right;">${mulai} - ${selesai}</td></tr>
                 </table>
-                <div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>
-                <div style="font-size: 11px;"><b>Belanja Jajanan:</b><br>${jajanan}</div>
-                <div style="border-bottom: 1px dashed #000; margin: 5px 0;"></div>
-                <table style="width: 100%; font-size: 13px; font-weight: bold;">
-                    <tr><td>TOTAL BAYAR:</td><td style="text-align: right;">Rp${total.toLocaleString('id-ID')}</td></tr>
+                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                <div style="font-size: 10px;"><b>Jajanan:</b><br>${jajanan}</div>
+                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                <table style="width: 100%; font-size: 11px; font-weight: bold;">
+                    <tr><td>TOTAL:</td><td style="text-align: right;">Rp${total.toLocaleString('id-ID')}</td></tr>
                 </table>
-                <div style="border-bottom: 1px dashed #000; margin-top: 5px;"></div>
-                <div style="text-align: center; font-size: 10px; margin-top: 6px;">Main Puas, Harga Pas! Terima Kasih.</div>
+                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                <div style="text-align: center; font-size: 9px; margin-top: 4px;">Terima Kasih! Main Kembali.</div>
             `;
             window.print();
         }
 
-        function cetakLaporanBerjalan() {
+        function cetakLaporanBulanan() {
             const area = document.getElementById('area-cetak');
-            const waktuSkrg = new Date().toLocaleString('id-ID');
-            
+            const tgl = new Date().toLocaleDateString('id-ID');
             let barisHTML = "";
             let grandTotal = 0;
 
             dataPSGlobal.forEach(ps => {
                 barisHTML += `
-                    <tr style="border-bottom: 1px solid #ddd; font-size: 11px;">
-                        <td style="padding: 4px 0;">${ps.noPS}</td>
-                        <td>${ps.status}</td>
+                    <tr style="font-size: 9px;">
+                        <td>${ps.noPS}</td>
+                        <td>${ps.status.replace("🔴 ", "")}</td>
                         <td style="text-align: right;">Rp${ps.biaya.toLocaleString('id-ID')}</td>
                     </tr>
                 `;
@@ -381,32 +288,25 @@
             });
 
             area.innerHTML = `
-                <div style="text-align: center; font-size: 14px; font-weight: bold;">OMSET BERJALAN KASIR</div>
-                <div style="text-align: center; font-size: 11px; margin-bottom: 8px;">Monitoring Realtime Unit</div>
-                <div style="font-size: 10px; text-align: left; margin-bottom: 5px;">Tanggal Cetak: ${waktuSkrg}</div>
-                <table style="width: 100%; border-collapse: collapse;">
+                <div style="text-align: center; font-weight: bold; font-size: 12px;">REKAP OMSET LIVE</div>
+                <div style="text-align: center; font-size: 10px;">Tanggal: ${tgl}</div>
+                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                <table style="width: 100%; font-size: 9px; border-collapse: collapse;">
                     <thead>
-                        <tr style="border-bottom: 1px solid #000; font-size: 11px; font-weight: bold;">
-                            <td style="padding-bottom: 4px;">UNIT</td>
-                            <td>STATUS</td>
-                            <td style="text-align: right;">TAGIHAN</td>
+                        <tr style="border-bottom: 1px dashed #000; font-weight: bold;">
+                            <td>UNIT</td><td>STATUS</td><td style="text-align: right;">OMSET</td>
                         </tr>
                     </thead>
-                    <tbody>
-                        ${barisHTML}
-                    </tbody>
+                    <tbody>${barisHTML}</tbody>
                 </table>
-                <div style="border-bottom: 2px double #000; margin-top: 8px;"></div>
-                <table style="width: 100%; font-size: 12px; font-weight: bold; margin-top: 4px;">
-                    <tr><td>TOTAL OMSET LIVE:</td><td style="text-align: right;">Rp${grandTotal.toLocaleString('id-ID')}</td></tr>
+                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                <table style="width: 100%; font-size: 11px; font-weight: bold;">
+                    <tr><td>TOTAL:</td><td style="text-align: right;">Rp${grandTotal.toLocaleString('id-ID')}</td></tr>
                 </table>
-                <div style="font-size: 9px; color: #555; text-align: center; margin-top: 15px;">*Data rekap permanen pasca STOP tersimpan otomatis di Google Sheets Laporan.</div>
+                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                <div style="text-align: center; font-size: 8px; margin-top: 5px;">*Data rekap permanen tersimpan otomatis di Google Sheets Laporan.</div>
             `;
             window.print();
-        }
-
-        function selisihSelesai(str) {
-            return str ? str.split(" | ")[0] : "-";
         }
     </script>
 </body>
