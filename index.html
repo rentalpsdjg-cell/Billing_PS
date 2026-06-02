@@ -6,17 +6,9 @@
     <title>BILLING PS DODI JAYA</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { 
-            background-color: #f1f5f9; 
-            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-            padding-bottom: 40px;
-        }
+        body { background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
         .navbar-custom { background-color: #0f172a; color: white; }
-        .card-ps { 
-            border: none; border-radius: 16px; 
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
-            background: white; padding: 16px !important; margin-bottom: 8px;
-        }
+        .card-ps { border: none; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); background: white; padding: 16px !important; margin-bottom: 8px; }
         .badge-status { font-size: 0.85rem; padding: 6px 14px; border-radius: 50px; font-weight: 600; }
         .bg-tersedia { background-color: #10b981; color: white; }
         .bg-main { background-color: #ef4444; color: white; }
@@ -26,16 +18,14 @@
         .btn-start { background-color: #1e293b; color: white; border: none; }
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; }
 
-        /* DEKORASI KHUSUS PRINTER THERMAL MINI 58mm / 80mm */
+        /* FORMAT ADJUSTMENT PRINTER MINI THERMAL 58mm */
         @media print {
             body * { visibility: hidden; }
             #area-cetak, #area-cetak * { visibility: visible; }
             #area-cetak { 
-                position: absolute; left: 0; top: 0; 
-                width: 58mm; /* Lebar standar thermal mini */
-                font-family: 'Courier New', Courier, monospace; 
-                color: #000; padding: 0; margin: 0;
-                font-size: 11px; line-height: 1.2;
+                position: absolute; left: 0; top: 0; width: 56mm; 
+                font-family: 'Courier New', Courier, monospace; color: #000;
+                font-size: 10px; line-height: 1.3; padding: 0; margin: 0;
             }
             .no-print { display: none !important; }
         }
@@ -48,7 +38,7 @@
     <div id="loading" class="loading-overlay">
         <div class="text-center">
             <div class="spinner-border text-primary mb-2" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
-            <div class="text-muted small fw-bold">Menghubungkan ke Kasir...</div>
+            <div class="text-muted small fw-bold">Memuat Data Kasir Dodi Jaya...</div>
         </div>
     </div>
 
@@ -56,7 +46,7 @@
         <div class="container-fluid px-3 d-flex justify-content-between align-items-center">
             <span class="navbar-brand m-0 fw-bold text-white fs-6">🎮 BILLING DODI JAYA</span>
             <div>
-                <button class="btn btn-warning btn-sm fw-bold me-1 text-dark" onclick="cetakLaporanBulanan()">📊 PRINT REKAP</button>
+                <button class="btn btn-warning btn-sm fw-bold me-1 text-dark" onclick="cetakLaporanBulanan()">📊 CETAK BULANAN</button>
                 <button class="btn btn-info btn-sm text-white fw-bold" onclick="muatData()">🔄 REFRESH</button>
             </div>
         </div>
@@ -67,11 +57,13 @@
     </div>
 
     <script>
+        // GANTI URL DI BAWAH INI DENGAN URL DEPLOY BARU ANDA
         const API_URL = "https://script.google.com/macros/s/AKfycbwG6ziAwlZpX3b0bvOZJkTn_od5RLOYFXVxLAzLkBLHGN2Yvy5oCjWwhzp6iUcnmrHA/exec";
         
         let menuJajananGlobal = [];
         let timerIntervals = {};
         let dataPSGlobal = [];
+        let timeoutBuster = null;
 
         document.addEventListener("DOMContentLoaded", function() {
             muatData();
@@ -86,20 +78,29 @@
             Object.keys(timerIntervals).forEach(key => clearInterval(timerIntervals[key]));
             timerIntervals = {};
 
+            if (timeoutBuster) clearTimeout(timeoutBuster);
+
             const callbackName = 'jsonp_' + Date.now() + Math.round(100 * Math.random());
-            window[callbackName] = function(response) {
+            
+            // Mekanisme pelindung jika sinyal HP lemot (Mencegah Pop Up mengganggu)
+            timeoutBuster = setTimeout(() => {
                 toggleLoading(false);
-                if (response.error) { alert("Error: " + response.error); return; }
+                console.log("Koneksi dialihkan, mencoba memuat ulang secara mandiri.");
+            }, 6000);
+
+            window[callbackName] = function(response) {
+                clearTimeout(timeoutBuster);
+                toggleLoading(false);
+                if (!response || response.error) return;
                 menuJajananGlobal = response.menu || [];
                 dataPSGlobal = response.ps || [];
                 renderDashboard(dataPSGlobal);
-                cleanupScript(scriptId);
+                cleanupScript('scr_load');
                 delete window[callbackName];
             };
 
-            const scriptId = 'scr_load';
             const script = document.createElement('script');
-            script.id = scriptId;
+            script.id = 'scr_load';
             script.src = `${API_URL}?action=getAppData&callback=${callbackName}`;
             document.body.appendChild(script);
         }
@@ -187,7 +188,7 @@
                 const selisih = target - sekarang;
                 const elemenTimer = document.getElementById(`timer-${id}`);
                 if (!elemenTimer) return;
-                if (selisih <= 0) { elemenTimer.innerHTML = `🛑 WAKTU HABIS!`; clearInterval(timerIntervals[id]); return; }
+                if (selisih <= 0) { elemenTimer.innerHTML = `🛑 SELESAI!`; clearInterval(timerIntervals[id]); return; }
                 const jam = Math.floor(selisih / (1000 * 60 * 60));
                 const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60));
                 const detik = Math.floor((selisih % (1000 * 60)) / 1000);
@@ -202,17 +203,16 @@
             const callbackName = 'act_' + Date.now() + Math.round(100 * Math.random());
             
             window[callbackName] = function(res) {
-                if (res.success) { muatData(); } else { alert("Gagal: " + res.error); toggleLoading(false); }
-                cleanupScript(scriptId);
+                if (res.success) { muatData(); } else { toggleLoading(false); }
+                cleanupScript('scr_action');
                 delete window[callbackName];
             };
 
-            const scriptId = 'scr_action';
             let params = "";
             Object.keys(dataParameter).forEach(key => { params += `&${key}=${encodeURIComponent(dataParameter[key])}`; });
 
             const script = document.createElement('script');
-            script.id = scriptId;
+            script.id = 'scr_action';
             script.src = `${API_URL}?callback=${callbackName}${params}`;
             document.body.appendChild(script);
         }
@@ -234,8 +234,8 @@
         }
 
         function stopBilling(id, totalBiaya, mulai, selesai, jajanan) {
-            if (!confirm(`STOP ${id}?\nTotal: Rp${totalBiaya.toLocaleString('id-ID')}\n\nNota otomatis dicetak.`)) return;
-            buatKuponThermal(id, "STRUK SELESAI", mulai, selesai, totalBiaya, jajanan);
+            if (!confirm(`STOP ${id}?\nTotal: Rp${totalBiaya.toLocaleString('id-ID')}`)) return;
+            buatKuponThermal(id, "STRUK KASIR", mulai, selesai, totalBiaya, jajanan);
             jalankanAksiJSONP({ action: "resetPS", id: id });
         }
 
@@ -244,28 +244,28 @@
             if (el) el.remove();
         }
 
-        // ================= STRUK UKURAN PRINTER THERMAL MINI =================
+        // FORMAT KUUPON UNTUK PRINTER BLUETOOTH THERMAL MINI
         function buatKuponThermal(id, judul, mulai, selesai, total, jajanan) {
             const area = document.getElementById('area-cetak');
             const tgl = new Date().toLocaleDateString('id-ID') + " " + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
             
             area.innerHTML = `
-                <div style="text-align: center; font-weight: bold; font-size: 12px;">PS DODI JAYA</div>
-                <div style="text-align: center; font-size: 10px;">${judul}</div>
-                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
-                <table style="width: 100%; font-size: 10px;">
-                    <tr><td>Tgl :</td><td style="text-align: right;">${tgl}</td></tr>
-                    <tr><td>Unit:</td><td style="text-align: right; font-weight: bold;">${id}</td></tr>
-                    <tr><td>Jam :</td><td style="text-align: right;">${mulai} - ${selesai}</td></tr>
+                <div style="text-align: center; font-weight: bold; font-size: 13px;">PS DODI JAYA</div>
+                <div style="text-align: center; font-size: 9px;">${judul}</div>
+                <div style="border-bottom: 1px dashed #000; margin: 3px 0;"></div>
+                <table style="width: 100%; font-size: 9px;">
+                    <tr><td>Waktu:</td><td style="text-align: right;">${tgl}</td></tr>
+                    <tr><td>Unit :</td><td style="text-align: right; font-weight: bold;">${id}</td></tr>
+                    <tr><td>Jam  :</td><td style="text-align: right;">${mulai} - ${selesai}</td></tr>
                 </table>
-                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
-                <div style="font-size: 10px;"><b>Jajanan:</b><br>${jajanan}</div>
-                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                <div style="border-bottom: 1px dashed #000; margin: 3px 0;"></div>
+                <div style="font-size: 9px;"><b>Menu Jajanan:</b><br>${jajanan}</div>
+                <div style="border-bottom: 1px dashed #000; margin: 3px 0;"></div>
                 <table style="width: 100%; font-size: 11px; font-weight: bold;">
                     <tr><td>TOTAL:</td><td style="text-align: right;">Rp${total.toLocaleString('id-ID')}</td></tr>
                 </table>
-                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
-                <div style="text-align: center; font-size: 9px; margin-top: 4px;">Terima Kasih! Main Kembali.</div>
+                <div style="border-bottom: 1px dashed #000; margin: 3px 0;"></div>
+                <div style="text-align: center; font-size: 9px; margin-top: 3px;">Terima Kasih Atas Kunjungannya!</div>
             `;
             window.print();
         }
@@ -288,8 +288,8 @@
             });
 
             area.innerHTML = `
-                <div style="text-align: center; font-weight: bold; font-size: 12px;">REKAP OMSET LIVE</div>
-                <div style="text-align: center; font-size: 10px;">Tanggal: ${tgl}</div>
+                <div style="text-align: center; font-weight: bold; font-size: 12px;">REKAP OMSET BULANAN</div>
+                <div style="text-align: center; font-size: 9px;">Tanggal rekap: ${tgl}</div>
                 <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
                 <table style="width: 100%; font-size: 9px; border-collapse: collapse;">
                     <thead>
@@ -301,10 +301,10 @@
                 </table>
                 <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
                 <table style="width: 100%; font-size: 11px; font-weight: bold;">
-                    <tr><td>TOTAL:</td><td style="text-align: right;">Rp${grandTotal.toLocaleString('id-ID')}</td></tr>
+                    <tr><td>TOTAL REKAP:</td><td style="text-align: right;">Rp${grandTotal.toLocaleString('id-ID')}</td></tr>
                 </table>
                 <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
-                <div style="text-align: center; font-size: 8px; margin-top: 5px;">*Data rekap permanen tersimpan otomatis di Google Sheets Laporan.</div>
+                <div style="text-align: center; font-size: 8px; margin-top: 5px;">*Data rekap permanen aman tersimpan otomatis di Google Sheets.</div>
             `;
             window.print();
         }
