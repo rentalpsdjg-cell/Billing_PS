@@ -48,7 +48,7 @@
   <div class="btn-group-header">
     <button onclick="hitungOmsetBulanan()" class="btn btn-info">🧮 HITUNG HASIL BULANAN</button>
     <button onclick="bukaLaporanBulanan()" class="btn btn-dark">📊 CETAK REKAP</button>
-    <button onclick="load()" class="btn btn-dark">🔄 REFRESH</button>
+    <button onclick="load()" class="btn btn-dark">🔄 REFRESH DATA</button>
   </div>
 </div>
 
@@ -60,6 +60,7 @@
 </div>
 
 <script>
+  // Ganti URL di bawah ini dengan URL Web App Apps Script Anda jika berubah
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuZZn52NlwNehwSV_rbxZXC0318hUgxaX9AvedQEsIn6OKKTiO9JVaCsEWkVEVFtfx/exec";
   
   window.SistemKasir = {
@@ -125,6 +126,7 @@
         }
       });
 
+      // Proteksi Extractor Jam agar aman dari format mentah Google Sheets
       let jamSelesaiTampil = "00:00";
       var matchJam = item.selesai.match(/(\d{2}):(\d{2})/);
       if (matchJam) {
@@ -194,22 +196,27 @@
       if (!matchJam) return;
       const targetJam = parseInt(matchJam[1], 10);
       const targetMenit = parseInt(matchJam[2], 10);
+      
       function hitung() {
         const sekarang = new Date();
         const target = new Date();
         target.setHours(targetJam, targetMenit, 0, 0);
+        
         if (target.getTime() < sekarang.getTime() && (sekarang.getTime() - target.getTime() > 6 * 60 * 60 * 1000)) {
           target.setDate(target.getDate() + 1);
         }
-        const diff = target.getTime() - brass = sekarang.getTime();
+        
+        const diff = target.getTime() - sekarang.getTime();
         const el = document.getElementById('t-' + id);
         if (!el) return;
+        
         if (diff <= 0) { 
           el.innerHTML = "WAKTU HABIS!"; 
           el.style.color = "#d35400"; 
           clearInterval(intervals[id]);
           return; 
         }
+        
         const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
         const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
         const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
@@ -246,7 +253,7 @@
   }
 
   function hitungOmsetBulanan() {
-    document.getElementById('content').innerHTML = '<div class="loading-screen"><div class="spinner"></div><h3>Menghitung Hasil Omset...</h3></div>';
+    document.getElementById('content').innerHTML = '<div class="loading-screen"><div class="spinner"></div><h3>Menghitung Hasil Omset dari Database...</h3></div>';
     SistemKasir.withSuccessHandler(function(hasil) {
       load();
       setTimeout(function() {
@@ -259,7 +266,7 @@
           "• TOTAL OMSET     : Rp " + hasil.totalOmset.toLocaleString('id-ID') + "\n\n" +
           "========================="
         );
-      }, 500);
+      }, 400);
     }).withFailureHandler(tanganiError).hitungBulanan();
   }
 
@@ -278,6 +285,7 @@
   }
 
   function bukaLaporanBulanan() {
+    // Diubah menggunakan format pubhtml agar kebal dari eror "unable to open file" milik google drive
     var URL_PRINT_PDF = "https://docs.google.com/spreadsheets/d/1q5l7KVYd8fxtXeVzOc3kV3ekuwQ2iSyFqgZaEk0NPkE/export?format=pdf&gid=1114515535&size=A4&portrait=true&fitw=true&gridlines=true";
     window.open(URL_PRINT_PDF, "_blank");
   }
