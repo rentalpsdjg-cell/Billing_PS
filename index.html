@@ -18,7 +18,6 @@
         .btn-start { background-color: #1e293b; color: white; border: none; }
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; }
 
-        /* REKAYASA HALAMAN CETAK THERMAL PRINTER MINI (58mm) */
         @media print {
             body * { visibility: hidden; }
             #area-cetak, #area-cetak * { visibility: visible; }
@@ -46,7 +45,7 @@
         <div class="container-fluid px-3 d-flex justify-content-between align-items-center">
             <span class="navbar-brand m-0 fw-bold text-white fs-6">🎮 BILLING DODI JAYA</span>
             <div>
-                <button class="btn btn-warning btn-sm fw-bold me-1 text-dark" onclick="cetakLaporanOmsetLive()">📊 REKAP STRUK</button>
+                <button class="btn btn-warning btn-sm fw-bold me-1 text-dark" onclick="ambilDanCetakLaporan()">📊 REKAP STRUK</button>
                 <button class="btn btn-info btn-sm text-white fw-bold" onclick="muatData()">🔄 REFRESH</button>
             </div>
         </div>
@@ -57,7 +56,6 @@
     </div>
 
     <script>
-        // URL SCRIPT BARU ANDA SUDAH AKTIF DI SINI
         const API_URL = "https://script.google.com/macros/s/AKfycbyBRpnnSv7d5ur3xH2fISXJ4hQXiY_-vaSFOTOndifLy3nVEinEu3wA-jDgCZAIK5wF/exec";
         
         let menuJajananGlobal = [];
@@ -72,7 +70,6 @@
             document.getElementById('loading').style.display = show ? 'flex' : 'none';
         }
 
-        // AMBIL DATA DARI GOOGLE SHEETS
         function muatData() {
             toggleLoading(true);
             Object.keys(timerIntervals).forEach(key => clearInterval(timerIntervals[key]));
@@ -235,7 +232,6 @@
             if (el) el.remove();
         }
 
-        // TATA LETAK STRUK PRINTER THERMAL MINI BLUETOOTH
         function buatKuponThermal(id, judul, mulai, selesai, total, jajanan) {
             const area = document.getElementById('area-cetak');
             const tgl = new Date().toLocaleDateString('id-ID') + " " + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
@@ -261,43 +257,64 @@
             window.print();
         }
 
-        function cetakLaporanOmsetLive() {
-            const area = document.getElementById('area-cetak');
-            const tgl = new Date().toLocaleDateString('id-ID');
-            let barisHTML = "";
-            let grandTotal = 0;
+        // FUNGSI PERBAIKAN: Menarik riwayat transaksi asli dari tab Laporan untuk dicetak ke Struk
+        function ambilDanCetakLaporan() {
+            toggleLoading(true);
+            const callbackName = 'report_' + Date.now() + Math.round(100 * Math.random());
+            
+            window[callbackName] = function(response) {
+                toggleLoading(false);
+                if (!response || !response.laporan) { alert("Gagal memuat riwayat!"); return; }
+                
+                const area = document.getElementById('area-cetak');
+                const tglHariIni = new Date().toLocaleDateString('id-ID');
+                let barisHTML = "";
+                let grandTotal = 0;
 
-            dataPSGlobal.forEach(ps => {
-                barisHTML += `
-                    <tr style="font-size: 9px;">
-                        <td>${ps.noPS}</td>
-                        <td>${ps.status.replace("🔴 ", "")}</td>
-                        <td style="text-align: right;">Rp${ps.biaya.toLocaleString('id-ID')}</td>
-                    </tr>
-                `;
-                grandTotal += ps.biaya;
-            });
-
-            area.innerHTML = `
-                <div style="text-align: center; font-weight: bold; font-size: 12px;">REKAP OMSET LIVE</div>
-                <div style="text-align: center; font-size: 9px;">Tanggal: ${tgl}</div>
-                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
-                <table style="width: 100%; font-size: 9px; border-collapse: collapse;">
-                    <thead>
-                        <tr style="border-bottom: 1px dashed #000; font-weight: bold;">
-                            <td>UNIT</td><td>STATUS</td><td style="text-align: right;">OMSET</td>
+                response.laporan.forEach(item => {
+                    barisHTML += `
+                        <tr style="font-size: 9px; border-bottom: 0.5px dashed #ccc;">
+                            <td style="padding: 2px 0;">${item.noPS}<br><span style="font-size:7px; color:#555;">${item.tanggal.split(' ')[1] || ''}</span></td>
+                            <td>${item.jajanan !== "-" ? "Jzn" : "Main"}</td>
+                            <td style="text-align: right;">Rp${item.pendapatan.toLocaleString('id-ID')}</td>
                         </tr>
-                    </thead>
-                    <tbody>${barisHTML}</tbody>
-                </table>
-                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
-                <table style="width: 100%; font-size: 11px; font-weight: bold;">
-                    <tr><td>TOTAL:</td><td style="text-align: right;">Rp${grandTotal.toLocaleString('id-ID')}</td></tr>
-                </table>
-                <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
-                <div style="text-align: center; font-size: 8px; margin-top: 5px;">*Data tersimpan aman di Google Sheets Laporan.</div>
-            `;
-            window.print();
+                    `;
+                    grandTotal += item.pendapatan;
+                });
+
+                if(response.laporan.length === 0) {
+                    barisHTML = `<tr><td colspan="3" style="text-align:center; font-size:9px; padding:10px 0;">Belum ada pendapatan masuk hari ini</td></tr>`;
+                }
+
+                area.innerHTML = `
+                    <div style="text-align: center; font-weight: bold; font-size: 12px;">REKAP OMSET TOTAL</div>
+                    <div style="text-align: center; font-size: 9px;">Tanggal Cetak: ${tglHariIni}</div>
+                    <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                    <table style="width: 100%; font-size: 9px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #000; font-weight: bold;">
+                                <td>UNIT</td><td>TIPE</td><td style="text-align: right;">OMSET</td>
+                            </tr>
+                        </thead>
+                        <tbody>${barisHTML}</tbody>
+                    </table>
+                    <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                    <table style="width: 100%; font-size: 11px; font-weight: bold;">
+                        <tr><td>GRAND TOTAL:</td><td style="text-align: right;">Rp${grandTotal.toLocaleString('id-ID')}</td></tr>
+                    </table>
+                    <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                    <div style="text-align: center; font-size: 8px; margin-top: 5px;">*Sumber data valid: Lembar Laporan Sheets</div>
+                `;
+                
+                cleanupScript(callbackName);
+                delete window[callbackName];
+                window.print();
+            };
+
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${API_URL}?action=getLaporan&callback=${callbackName}`;
+            document.body.appendChild(script);
         }
     </script>
 </body>
