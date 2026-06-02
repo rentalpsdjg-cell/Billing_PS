@@ -2,6 +2,8 @@
 <html>
 <head>
   <base target="_top">
+  <meta charset="UTF-8">
+  <title>BILLING PS DODI JAYA</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Arial, sans-serif; }
     body { background-color: #f4f6f9; padding: 20px; color: #333; }
@@ -55,6 +57,7 @@
 </div>
 
 <script>
+  // PASTIKAN URL DI BAWAH INI SAMA DENGAN URL WEB APP GOOGLE SCRIPT ANDA
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuZZn52NlwNehwSV_rbxZXC0318hUgxaX9AvedQEsIn6OKKTiO9JVaCsEWkVEVFtfx/exec";
   
   window.SistemKasir = {
@@ -64,7 +67,8 @@
       const callbackName = "jsonp_" + Math.round(100000 * Math.random());
       window[callbackName] = (data) => {
         delete window[callbackName];
-        document.getElementById(callbackName).remove();
+        var scriptEl = document.getElementById(callbackName);
+        if(scriptEl) scriptEl.remove();
         if (data && data.error) this.failCb(data.error); else this.successCb(data);
       };
       const script = document.createElement("script");
@@ -126,13 +130,6 @@
         riwayatJajananTeks = bagian[1];
       }
 
-      if (jamSelesaiTampil.indexOf(":") !== -1) {
-        let match = jamSelesaiTampil.match(/(\d{2}):(\d{2})/);
-        if (match) {
-          jamSelesaiTampil = match[1] + ":" + match[2];
-        }
-      }
-
       const col = document.createElement('div');
       col.className = 'col';
       
@@ -146,7 +143,7 @@
 
       if (isMain) {
         cardHTML += `
-          <div class="timer" id="t-${item.noPS}">00:00:00</div>
+          <div class="timer" id="t-${item.noPS}">--:--:--</div>
           <div class="info-text">Jam Selesai: <b>${jamSelesaiTampil} WIB</b><br>Total Billing: <b>Rp ${item.biaya.toLocaleString('id-ID')}</b></div>
           <button onclick="cetakNotaLangsung('${item.noPS}')" class="btn btn-dark" style="width:100%; margin-bottom:6px;">🖨️ CETAK NOTA KASIR</button>
           <button onclick="stop('${item.noPS}')" class="btn btn-danger">SELESAI & SIMPAN OMSET</button>
@@ -207,21 +204,20 @@
           target.setDate(target.getDate() + 1);
         }
         
-        const diff = target.getTime() - Urban.getTime(); // fallback safe diff calculation
-        const realDiff = target.getTime() - sekarang.getTime();
+        const diff = target.getTime() - sekarang.getTime();
         const el = document.getElementById('t-' + id);
         if (!el) return;
         
-        if (realDiff <= 0) { 
+        if (diff <= 0) { 
           el.innerHTML = "WAKTU HABIS!"; 
           el.style.color = "#d35400"; 
           clearInterval(intervals[id]);
           return; 
         }
         
-        const h = Math.floor(realDiff / 3600000).toString().padStart(2, '0');
-        const m = Math.floor((realDiff % 3600000) / 60000).toString().padStart(2, '0');
-        const s = Math.floor((realDiff % 60000) / 1000).toString().padStart(2, '0');
+        const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
+        const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
+        const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
         el.innerHTML = h + ':' + m + ':' + s;
       }
       
@@ -265,8 +261,6 @@
     if (item.selesai && item.selesai.indexOf(" | Jrn:") !== -1) riwayat = item.selesai.split(" | Jrn:")[1];
     
     let jamSelesaiClean = item.selesai.split(" | Jrn:")[0];
-    let match = jamSelesaiClean.match(/(\d{2}):(\d{2})/);
-    if (match) jamSelesaiClean = match[1] + ":" + match[2];
 
     const win = window.open("", "_blank");
     win.document.write('<html><head><title>NOTA</title><style>body{font-family:monospace;width:52mm;font-size:10px;margin:0;padding:4px;}.line{border-top:1px dashed #000;margin:5px 0;}.text-center{text-align:center;}</style></head><body><div class="text-center"><b>BILLING DODI JAYA</b></div><div class="line"></div>Station : ' + item.noPS + '<br>Durasi  : ' + item.durasi + ' Jam<br>Selesai : ' + jamSelesaiClean + ' WIB<div class="line"></div><b>Jajanan:</b><br>' + riwayat + '<div class="line"></div><b>TOTAL: Rp ' + item.biaya.toLocaleString('id-ID') + '</b><br><div class="line"></div><div class="text-center">Terima Kasih!</div></body></html>');
@@ -274,19 +268,20 @@
     setTimeout(function(){ win.print(); win.close(); }, 250);
   }
 
-  // FUNGSI BARU: MEMBUKA INSTANT EXPORT & SIAP CETAK REKAP LAPORAN
+  // FUNGSI UTAMA CETAK LAPORAN BULANAN (EKSKUSIF LAYOUT SIAP PRINT PDF)
   function bukaLaporanBulanan() {
     var spreadsheetId = "1q5l7KVYd8fxtXeVzOc3kV3ekuwQ2iSyFqgZaEk0NPkE";
-    // Parameter ini memaksa Google Sheet membuka layout print PDF siap cetak untuk tab kedua ("Laporan")
+    var gidLaporan = "1114515535"; // Mengarah khusus ke lembar tab 'Laporan'
+    
     var urlPrint = "https://docs.google.com/spreadsheets/d/" + spreadsheetId + "/export?exportFormat=pdf&format=pdf" + 
-                   "&size=A4" +             // Ukuran kertas kertas A4
-                   "&portrait=true" +       // Posisi kertas tegak (Portrait)
-                   "&fitw=true" +           // Lebar halaman disesuaikan ukuran kertas
-                   "&gridlines=true" +      // Menampilkan garis tabel pembatas data
+                   "&size=A4" +             // Kertas A4
+                   "&portrait=true" +       // Posisi Tegak (Portrait)
+                   "&fitw=true" +           // Lebar pas kertas
+                   "&gridlines=true" +      // Garis tabel tampak nyata
                    "&printtitle=false" + 
                    "&sheetnames=false" + 
                    "&fzr=false" + 
-                   "&gid=1114515535";       // Mengarah langsung ke Tab "Laporan" Anda
+                   "&gid=" + gidLaporan;
     
     window.open(urlPrint, "_blank");
   }
