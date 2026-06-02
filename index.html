@@ -121,19 +121,10 @@
         }
       });
 
-      let jamSelesaiTampil = item.selesai || "";
-      let riwayatJajananTeks = "";
-      if (item.selesai && item.selesai.indexOf(" | Jrn:") !== -1) {
-        let bagian = item.selesai.split(" | Jrn:");
-        jamSelesaiTampil = bagian[0];
-        riwayatJajananTeks = bagian[1];
-      }
-
-      var matchJam = jamSelesaiTampil.match(/(\d{2}):(\d{2})/);
+      let jamSelesaiTampil = "00:00";
+      var matchJam = item.selesai.match(/(\d{2}):(\d{2})/);
       if (matchJam) {
         jamSelesaiTampil = matchJam[1] + ":" + matchJam[2];
-      } else {
-        jamSelesaiTampil = "00:00";
       }
 
       const col = document.createElement('div');
@@ -178,7 +169,7 @@
             <select id="m-${item.noPS}" class="form-control" style="margin-top:4px;">${options}</select>
             <button onclick="pesan('${item.noPS}')" class="btn btn-warning" ${isMain ? '' : 'disabled'}>➕ Masukkan ke Billing</button>
             <div class="jajanan-list" id="list-jajanan-${item.noPS}">
-              ${riwayatJajananTeks ? 'Item: ' + riwayatJajananTeks : 'Belum jajan'}
+              ${item.jajanan ? 'Item: ' + item.jajanan : 'Belum jajan'}
             </div>
           </div>
         </div>
@@ -187,7 +178,7 @@
       col.innerHTML = cardHTML;
       container.appendChild(col);
 
-      if (isMain && jamSelesaiTampil.includes(":")) {
+      if (isMain && jamSelesaiTampil !== "00:00") {
         runTimerPintar(item.noPS, jamSelesaiTampil);
       }
     });
@@ -253,21 +244,21 @@
   function cetakNotaLangsung(id) {
     const item = dataPSGlobal.find(p => p.noPS === id);
     if (!item) return alert("Gagal mencetak nota.");
-    let riwayat = "Tidak ada jajanan";
-    if (item.selesai && item.selesai.indexOf(" | Jrn:") !== -1) riwayat = item.selesai.split(" | Jrn:")[1];
-    let jamSelesaiClean = item.selesai.split(" | Jrn:")[0];
-    var matchJam = jamSelesaiClean.match(/(\d{2}):(\d{2})/);
+    let riwayat = item.jajanan ? item.jajanan : "Tidak ada jajanan";
+    let jamSelesaiClean = "00:00";
+    var matchJam = item.selesai.match(/(\d{2}):(\d{2})/);
     if(matchJam) jamSelesaiClean = matchJam[1] + ":" + matchJam[2];
+    
     const win = window.open("", "_blank");
     win.document.write('<html><head><title>NOTA</title><style>body{font-family:monospace;width:52mm;font-size:10px;margin:0;padding:4px;}.line{border-top:1px dashed #000;margin:5px 0;}.text-center{text-align:center;}</style></head><body><div class="text-center"><b>BILLING DODI JAYA</b></div><div class="line"></div>Station : ' + item.noPS + '<br>Durasi  : ' + item.durasi + ' Jam<br>Selesai : ' + jamSelesaiClean + ' WIB<div class="line"></div><b>Jajanan:</b><br>' + riwayat + '<div class="line"></div><b>TOTAL: Rp ' + item.biaya.toLocaleString('id-ID') + '</b><br><div class="line"></div><div class="text-center">Terima Kasih!</div></body></html>');
     win.document.close();
-    setTimeout(function(){ win.print(); win.close(); }, 250);
+    setTimeout(function(){ win.print(); win.close(); }, 300);
   }
 
-  // SOLUSI CETAK BERFUNGSI TOTAL: Langsung mengarah ke lembar GID Laporan Bulanan tanpa terblokir sistem Google Drive
+  // AMAN TOTAL: Membuka cetak PDF lembar Laporan secara instan tanpa terblokir sistem Google Drive
   function bukaLaporanBulanan() {
-    var URL_SPREADSHEET = "https://docs.google.com/spreadsheets/d/1q5l7KVYd8fxtXeVzOc3kV3ekuwQ2iSyFqgZaEk0NPkE/edit#gid=1114515535";
-    window.open(URL_SPREADSHEET, "_blank");
+    var URL_PRINT_PDF = "https://docs.google.com/spreadsheets/d/1q5l7KVYd8fxtXeVzOc3kV3ekuwQ2iSyFqgZaEk0NPkE/export?format=pdf&gid=1114515535&size=A4&portrait=true&fitw=true&gridlines=true";
+    window.open(URL_PRINT_PDF, "_blank");
   }
 
   window.onload = load;
