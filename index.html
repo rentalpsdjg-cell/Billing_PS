@@ -207,20 +207,21 @@
           target.setDate(target.getDate() + 1);
         }
         
-        const diff = target.getTime() - sekarang.getTime();
+        const diff = target.getTime() - Urban.getTime(); // fallback safe diff calculation
+        const realDiff = target.getTime() - sekarang.getTime();
         const el = document.getElementById('t-' + id);
         if (!el) return;
         
-        if (diff <= 0) { 
+        if (realDiff <= 0) { 
           el.innerHTML = "WAKTU HABIS!"; 
           el.style.color = "#d35400"; 
           clearInterval(intervals[id]);
           return; 
         }
         
-        const h = Math.floor(diff / 3600000).toString().padStart(2, '0');
-        const m = Math.floor((diff % 3600000) / 60000).toString().padStart(2, '0');
-        const s = Math.floor((diff % 60000) / 1000).toString().padStart(2, '0');
+        const h = Math.floor(realDiff / 3600000).toString().padStart(2, '0');
+        const m = Math.floor((realDiff % 3600000) / 60000).toString().padStart(2, '0');
+        const s = Math.floor((realDiff % 60000) / 1000).toString().padStart(2, '0');
         el.innerHTML = h + ':' + m + ':' + s;
       }
       
@@ -273,9 +274,21 @@
     setTimeout(function(){ win.print(); win.close(); }, 250);
   }
 
-  // FUNGSI UTAMA UNTUK MEMBUKA STRUKTUR SPREADSHEET ANDA SECARA LANGSUNG
+  // FUNGSI BARU: MEMBUKA INSTANT EXPORT & SIAP CETAK REKAP LAPORAN
   function bukaLaporanBulanan() {
-    window.open("https://docs.google.com/spreadsheets/d/1q5l7KVYd8fxtXeVzOc3kV3ekuwQ2iSyFqgZaEk0NPkE/edit", "_blank");
+    var spreadsheetId = "1q5l7KVYd8fxtXeVzOc3kV3ekuwQ2iSyFqgZaEk0NPkE";
+    // Parameter ini memaksa Google Sheet membuka layout print PDF siap cetak untuk tab kedua ("Laporan")
+    var urlPrint = "https://docs.google.com/spreadsheets/d/" + spreadsheetId + "/export?exportFormat=pdf&format=pdf" + 
+                   "&size=A4" +             // Ukuran kertas kertas A4
+                   "&portrait=true" +       // Posisi kertas tegak (Portrait)
+                   "&fitw=true" +           // Lebar halaman disesuaikan ukuran kertas
+                   "&gridlines=true" +      // Menampilkan garis tabel pembatas data
+                   "&printtitle=false" + 
+                   "&sheetnames=false" + 
+                   "&fzr=false" + 
+                   "&gid=1114515535";       // Mengarah langsung ke Tab "Laporan" Anda
+    
+    window.open(urlPrint, "_blank");
   }
 
   window.onload = load;
