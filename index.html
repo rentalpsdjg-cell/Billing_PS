@@ -57,7 +57,6 @@
 </div>
 
 <script>
-  // PASTIKAN URL DI BAWAH INI SAMA DENGAN URL WEB APP GOOGLE SCRIPT ANDA
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuZZn52NlwNehwSV_rbxZXC0318hUgxaX9AvedQEsIn6OKKTiO9JVaCsEWkVEVFtfx/exec";
   
   window.SistemKasir = {
@@ -122,12 +121,18 @@
         }
       });
 
+      // Filter Pemotongan teks Tanggal 1899 agar murni jam-menit
       let jamSelesaiTampil = item.selesai || "";
       let riwayatJajananTeks = "";
       if (item.selesai && item.selesai.indexOf(" | Jrn:") !== -1) {
         let bagian = item.selesai.split(" | Jrn:");
         jamSelesaiTampil = bagian[0];
         riwayatJajananTeks = bagian[1];
+      }
+      
+      var cekMatch = jamSelesaiTampil.match(/(\d{2}):(\d{2})/);
+      if (cekMatch) {
+        jamSelesaiTampil = cekMatch[1] + ":" + cekMatch[2];
       }
 
       const col = document.createElement('div');
@@ -255,7 +260,7 @@
   }
 
   function cetakNotaLangsung(id) {
-    const item = dataPSGlobal.find(p => p.noPS === id);
+    const item = dataPSGlobal.find(p => p.find && p.noPS === id || p.noPS === id);
     if (!item) return alert("Gagal mencetak nota.");
     let riwayat = "Tidak ada jajanan";
     if (item.selesai && item.selesai.indexOf(" | Jrn:") !== -1) riwayat = item.selesai.split(" | Jrn:")[1];
@@ -268,16 +273,16 @@
     setTimeout(function(){ win.print(); win.close(); }, 250);
   }
 
-  // FUNGSI UTAMA CETAK LAPORAN BULANAN (EKSKUSIF LAYOUT SIAP PRINT PDF)
+  // MODUL FIX CETAK PDF SIAP PRINT UNTUK TAB LAPORAN
   function bukaLaporanBulanan() {
     var spreadsheetId = "1q5l7KVYd8fxtXeVzOc3kV3ekuwQ2iSyFqgZaEk0NPkE";
-    var gidLaporan = "1114515535"; // Mengarah khusus ke lembar tab 'Laporan'
+    var gidLaporan = "1114515535"; 
     
     var urlPrint = "https://docs.google.com/spreadsheets/d/" + spreadsheetId + "/export?exportFormat=pdf&format=pdf" + 
-                   "&size=A4" +             // Kertas A4
-                   "&portrait=true" +       // Posisi Tegak (Portrait)
-                   "&fitw=true" +           // Lebar pas kertas
-                   "&gridlines=true" +      // Garis tabel tampak nyata
+                   "&size=A4" +             
+                   "&portrait=true" +       
+                   "&fitw=true" +           
+                   "&gridlines=true" +      
                    "&printtitle=false" + 
                    "&sheetnames=false" + 
                    "&fzr=false" + 
