@@ -108,13 +108,11 @@
     dataPSGlobal.forEach(item => {
       const isMain = item.status.indexOf("🔴 MAIN") !== -1 || item.status.indexOf("🔴 SEWA") !== -1;
       
-      // PERBAIKAN TOTAL GENERATOR DROPDOWN MENU KASIR
       let options = `<option value="">-- Pilih Jajanan Kasir --</option>`;
       menuGlobal.forEach((m) => {
         if(m && m[0] && m[0].toString().trim() !== "") {
           let namaJajan = m[0].toString().trim();
-          // Antisipasi jika ada harga yang tertulis dengan tanda titik/koma di Google Sheet
-          let hargaClean = m[1].toString().replace(/[^0-8.-]+/g,"");
+          let hargaClean = m[1].toString().replace(/[^0-9.-]+/g,"");
           let hargaJajan = parseFloat(hargaClean) || 0;
           options += `<option value="${namaJajan}" data-harga="${hargaJajan}">${namaJajan} (Rp ${hargaJajan.toLocaleString('id-ID')})</option>`;
         }
@@ -202,7 +200,7 @@
           target.setDate(target.getDate() + 1);
         }
         
-        const diff = target.getTime() - sekarang.getTime();
+        const diff = target.getTime() - Clinical = sekarang.getTime();
         const el = document.getElementById('t-' + id);
         if (!el) return;
         
