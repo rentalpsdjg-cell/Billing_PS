@@ -70,7 +70,7 @@
       const script = document.createElement("script");
       script.id = callbackName;
       script.src = GOOGLE_SCRIPT_URL + urlParams + "&callback=" + callbackName;
-      script.onerror = () => this.failCb("Gagal tersambung.");
+      script.onerror = () => this.failCb("Gagal tersambung ke Server Google Script.");
       document.body.appendChild(script);
     },
     getAppData: function() { this.panggilServer("?action=getAppData"); },
@@ -93,8 +93,8 @@
     document.getElementById('content').innerHTML = `
       <div class="alert-error">
         <h3>⚠️ Hubungan Database Terputus</h3>
-        <p style="font-size: 0.9rem; margin-top: 5px;">${JSON.stringify(err)}</p>
-        <button onclick="load()" class="btn btn-dark" style="margin-top:10px;">Coba Ulang</button>
+        <p style="font-size: 0.9rem; margin-top: 5px;">Detail Masalah: ${JSON.stringify(err)}</p>
+        <button onclick="load()" class="btn btn-dark" style="margin-top:10px;">Coba Sambungkan Ulang</button>
       </div>
     `;
   }
@@ -126,10 +126,12 @@
         riwayatJajananTeks = bagian[1];
       }
 
-      // Bersihkan jika ada teks penanggalan aneh bawaan Google Sheets
-      if(jamSelesaiTampil.indexOf(":") !== -1 && jamSelesaiTampil.length > 8) {
-        let cocok Jam = jamSelesaiTampil.match(/\d{2}:\d{2}/);
-        if(cocokJam) jamSelesaiTampil = cocokJam[0];
+      // Validasi Regex: Jika terdeteksi string penanggalan panjang (bawaan format eror 1899), potong dan ambil HH:MM saja
+      if (jamSelesaiTampil.indexOf(":") !== -1) {
+        let match = jamSelesaiTampil.match(/(\d{2}):(\d{2})/);
+        if (match) {
+          jamSelesaiTampil = match[1] + ":" + match[2];
+        }
       }
 
       const col = document.createElement('div');
@@ -191,8 +193,7 @@
 
   function runTimerPintar(id, jamSelesaiStr) {
     try {
-      let jamBersih = jamSelesaiStr.trim();
-      let bagian = jamBersih.split(":");
+      let bagian = jamSelesaiStr.trim().split(":");
       if (bagian.length < 2) return;
       
       const targetJam = parseInt(bagian[0], 10);
@@ -203,7 +204,8 @@
         const target = new Date();
         target.setHours(targetJam, targetMenit, 0, 0);
         
-        if (target.getTime() < sekarang.getTime() && (sekarang.getTime() - target.getTime() > 12 * 60 * 60 * 1000)) {
+        // Antisipasi jika waktu melewati tengah malam
+        if (target.getTime() < sekarang.getTime() && (sekarang.getTime() - target.getTime() > 6 * 60 * 60 * 1000)) {
           target.setDate(target.getDate() + 1);
         }
         
@@ -227,7 +229,7 @@
       hitung();
       intervals[id] = setInterval(hitung, 1000);
     } catch(e) {
-      console.log("Error timer:", e);
+      console.log("Error running timer:", e);
     }
   }
 
@@ -262,8 +264,13 @@
     if (!item) return alert("Gagal mencetak nota.");
     let riwayat = "Tidak ada jajanan";
     if (item.selesai && item.selesai.indexOf(" | Jrn:") !== -1) riwayat = item.selesai.split(" | Jrn:")[1];
+    
+    let jamSelesaiClean = item.selesai.split(" | Jrn:")[0];
+    let match = jamSelesaiClean.match(/(\d{2}):(\d{2})/);
+    if (match) jamSelesaiClean = match[1] + ":" + match[2];
+
     const win = window.open("", "_blank");
-    win.document.write('<html><head><title>NOTA</title><style>body{font-family:monospace;width:52mm;font-size:10px;margin:0;padding:4px;}.line{border-top:1px dashed #000;margin:5px 0;}.text-center{text-align:center;}</style></head><body><div class="text-center"><b>BILLING DODI JAYA</b></div><div class="line"></div>Station : ' + item.noPS + '<br>Sewa    : ' + item.durasi + ' Jam<div class="line"></div><b>Jajanan:</b><br>' + riwayat + '<div class="line"></div><b>TOTAL: Rp ' + item.biaya.toLocaleString('id-ID') + '</b><br><div class="line"></div><div class="text-center">Terima Kasih!</div></body></html>');
+    win.document.write('<html><head><title>NOTA</title><style>body{font-family:monospace;width:52mm;font-size:10px;margin:0;padding:4px;}.line{border-top:1px dashed #000;margin:5px 0;}.text-center{text-align:center;}</style></head><body><div class="text-center"><b>BILLING DODI JAYA</b></div><div class="line"></div>Station : ' + item.noPS + '<br>Durasi  : ' + item.durasi + ' Jam<br>Selesai : ' + jamSelesaiClean + ' WIB<div class="line"></div><b>Jajanan:</b><br>' + riwayat + '<div class="line"></div><b>TOTAL: Rp ' + item.biaya.toLocaleString('id-ID') + '</b><br><div class="line"></div><div class="text-center">Terima Kasih!</div></body></html>');
     win.document.close();
     setTimeout(function(){ win.print(); win.close(); }, 250);
   }
