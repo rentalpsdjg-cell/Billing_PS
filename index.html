@@ -2,6 +2,8 @@
 <html>
 <head>
   <base target="_top">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css">
   <link href="https://cdn.jsdelivr.net/npm/tom-select@2.2.2/dist/css/tom-select.bootstrap5.min.css" rel="stylesheet">
   <style>
@@ -26,7 +28,11 @@
   </div>
 
   <div id="content" class="row">
-    <div class="text-center mt-5">Memuat Sistem Kasir...</div>
+    <div class="text-center mt-5 py-5">
+      <div class="spinner-border text-primary mb-3" role="status"></div>
+      <h4>🔄 Memuat Sistem Kasir...</h4>
+      <p class="text-muted small">Menghubungkan ke Google Sheets backend...</p>
+    </div>
   </div>
 </div>
 
@@ -38,48 +44,52 @@
   let dataPSGlobal = [];
   let tomSelectInstances = {};
 
-  // Memuat data dari database Google Sheet melalui Kode.gs
+  // 1. FUNGSI LOAD DATA UTAMA
   function load() {
+    // Hancurkan TomSelect lama agar tidak membuat browser hang
     Object.keys(tomSelectInstances).forEach(k => {
-      if(tomSelectInstances[k]) tomSelectInstances[k].destroy();
+      if(tomSelectInstances[k]) {
+        try { tomSelectInstances[k].destroy(); } catch(e) {}
+      }
     });
     tomSelectInstances = {};
     
     document.getElementById('content').innerHTML = `
-      <div class="text-center mt-5 py-5">
+      <div class="text-center col-12 mt-5 py-5">
         <div class="spinner-border text-primary mb-3" role="status"></div>
         <h4>🔄 Memuat Data Terbaru...</h4>
-        <p class="text-muted small">Menghubungkan ke Google Sheets backend...</p>
+        <p class="text-muted small">Sedang berkomunikasi dengan database Google Sheet...</p>
       </div>
     `;
     
-    // google.script.run secara otomatis mengarah ke URL Web App Anda
+    // Panggil fungsi getAppData di Kode.gs
     google.script.run
       .withSuccessHandler(render)
       .withFailureHandler(tanganiError)
       .getAppData();
   }
 
-  // Menangkap error jika backend terputus atau nama tab Sheet salah
+  // 2. FUNGSI PENANGAN ERROR SINKRONISASI
   function tanganiError(err) {
     document.getElementById('content').innerHTML = `
       <div class="col-12 mt-4">
         <div class="alert alert-danger shadow-sm text-center" role="alert">
-          <h4 class="alert-heading fw-bold">⚠️ Koneksi Gagal!</h4>
-          <p class="mb-2">Aplikasi tidak dapat menarik data dari backend Google Sheets Anda.</p>
+          <h4 class="alert-heading fw-bold">⚠️ Koneksi Database Gagal!</h4>
+          <p class="mb-2">Aplikasi kasir tidak diizinkan mengakses Google Sheet Anda.</p>
           <hr>
           <div class="text-start bg-light p-3 font-monospace text-dark rounded mb-3 small" style="max-height: 150px; overflow-y: auto;">
-            <b>Detail Error:</b> ${err.message || err}
+            <b>Pesan Error:</b> ${err.message || JSON.stringify(err)}
           </div>
           <p class="small text-muted mb-3">Solusi: Pastikan tab di Google Sheet Anda bernama <b>"Dashboard"</b> dan <b>"Menu"</b>.</p>
-          <button onclick="load()" class="btn btn-danger fw-bold px-4">Coba Lagi</button>
+          <button onclick="load()" class="btn btn-danger fw-bold px-4">Coba Hubungkan Ulang</button>
         </div>
       </div>
     `;
   }
 
-  // Render Kartu Billing PS
+  // 3. FUNGSI RENDER HALAMAN UTAMA KASIR
   function render(data) {
+    // Stop semua hitung mundur lama
     Object.keys(intervals).forEach(k => clearInterval(intervals[k]));
     
     menuGlobal = data.menu || [];
@@ -92,16 +102,14 @@
       return;
     }
 
+    // Bangun HTML Card untuk masing-masing Station PS
     dataPSGlobal.forEach(item => {
       const isMain = item.status.includes("🔴 MAIN") || item.status.includes("🔴 SEWA");
       
+      // Susun Pilihan Dropdown Jajanan
       let options = `<option value="">Cari/Pilih Jajanan...</option>`;
       options += menuGlobal.map((m, index) => {
         if(!m[0] || m[1] === undefined || m[1] === "") return '';
-        if(parseInt(m[1]) === 0) {
-          return `<option value="" disabled class="fw-bold text-secondary">${m[0]}</option>`;
-        }
-        // Menggunakan kombinasi index-harga agar value drop-down dijamin unik
         return `<option value="${index}-${m[1]}" data-nama="${m[0]}" data-harga="${m[1]}">${m[0]} (Rp ${parseInt(m[1]).toLocaleString('id-ID')})</option>`;
       }).join('');
 
@@ -164,7 +172,7 @@
         <div class="jajanan-section">
           <label class="small fw-bold text-dark d-block mb-1">🛒 Tambah Jajanan / Snack Kasir:</label>
           <div class="mb-2">
-            <select id="m-${item.noPS}" class="form-select dropdown-pencarian">${options}</select>
+            <select id="m-${item.noPS}" class="form-select select-jajanan">${options}</select>
           </div>
           <button onclick="pesan('${item.noPS}')" class="btn btn-warning btn-sm w-100 fw-bold text-dark" ${isMain ? '' : 'disabled'}>➕ Masukkan ke Billing</button>
           <div class="list-jajanan-lokal" id="list-jajanan-${item.noPS}">
@@ -177,12 +185,18 @@
       div.innerHTML = htmlContent;
       container.appendChild(div);
       
-      // Inisialisasi TomSelect untuk pencarian pintar drop-down jajanan
-      tomSelectInstances[item.noPS] = new TomSelect(`#m-${item.noPS}`, {
-        create: false,
-        sortField: { field: "text", direction: "asc" },
-        placeholder: "Ketik nama jajanan / harga..."
-      });
+      // PERBAIKAN UTAMA: Inisialisasi TomSelect dijeda sedikit agar elemen HTML siap sepenuhnya
+      setTimeout(function() {
+        try {
+          tomSelectInstances[item.noPS] = new TomSelect(`#m-${item.noPS}`, {
+            create: false,
+            sortField: { field: "text", direction: "asc" },
+            placeholder: "Ketik jajanan / harga..."
+          });
+        } catch(e) {
+          console.error("Gagal memuat pencarian pintar pada stasiun " + item.noPS);
+        }
+      }, 50);
       
       if (isMain && item.selesaiRaw) {
         runTimer(item.noPS, item.selesaiRaw);
@@ -190,7 +204,7 @@
     });
   }
 
-  // Jalannya Hitung Mundur Waktu Sesi PS
+  // 4. LOGIKA TIMER HITUNG MUNDUR
   function runTimer(id, target) {
     function hitung() {
       const diff = target - new Date().getTime();
@@ -221,7 +235,6 @@
       .mulaiMain(id, parseFloat(jam), tipePS);
   }
 
-  // Fungsi Tambah Jajanan Kasir (Sistem Pembacaan Indeks Aman)
   function pesan(id) {
     const ts = tomSelectInstances[id];
     if (!ts) return alert("Sistem pencarian bermasalah.");
@@ -231,7 +244,6 @@
 
     const selectEl = document.getElementById('m-' + id);
     const selectedOption = selectEl.querySelector(`option[value="${selectedValue}"]`);
-    
     if (!selectedOption) return alert("Data jajanan tidak valid.");
 
     const namaJajanan = selectedOption.getAttribute('data-nama');
@@ -312,7 +324,8 @@
     }
   }
 
-  window.onload = load;
+  // Pemicu awal saat browser memuat halaman
+  window.addEventListener('DOMContentLoaded', load);
 </script>
 </body>
 </html>
