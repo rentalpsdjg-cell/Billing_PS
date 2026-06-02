@@ -12,21 +12,23 @@
             font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
             -webkit-user-select: none;
             user-select: none;
+            padding-bottom: 40px;
         }
         .navbar-custom { background-color: #0f172a; color: white; }
         
-        /* Desain Card khusus Jari Tangan Kasir HP */
+        /* Kartu Responsif Khusus Layar HP */
         .card-ps { 
             border: none; 
             border-radius: 16px; 
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); 
             background: white; 
             padding: 16px !important;
+            margin-bottom: 8px;
         }
         
         .badge-status { 
-            font-size: 0.9rem; 
-            padding: 8px 14px; 
+            font-size: 0.85rem; 
+            padding: 6px 14px; 
             border-radius: 50px; 
             font-weight: 600;
         }
@@ -34,20 +36,20 @@
         .bg-main { background-color: #ef4444; color: white; }
         
         .section-jajanan { 
-            background-color: #fef3c7; 
-            border: 1px solid #f59e0b; 
+            background-color: #fffbeb; 
+            border: 1px dashed #f59e0b; 
             border-radius: 12px; 
             padding: 12px; 
         }
         
-        /* Tinggi elemen pas untuk ditekan di HP Android */
+        /* Form & Tombol Ukuran Sentuhan Jari HP Android */
         .form-select, .form-control {
-            height: 46px; 
+            height: 48px; 
             font-size: 1rem !important;
             border-radius: 10px;
         }
         .btn-custom {
-            height: 46px;
+            height: 48px;
             font-size: 1rem;
             font-weight: bold;
             border-radius: 10px;
@@ -56,11 +58,13 @@
             justify-content: center;
         }
         .btn-start { background-color: #1e293b; color: white; border: none; }
+        .btn-start:hover { background-color: #334155; }
         
+        /* Indikator Loading Layar Penuh */
         .loading-overlay { 
             position: fixed; 
             top: 0; left: 0; width: 100%; height: 100%; 
-            background: rgba(255,255,255,0.92); 
+            background: rgba(255,255,255,0.95); 
             display: flex; justify-content: center; align-items: center; 
             z-index: 9999; 
         }
@@ -71,7 +75,7 @@
     <div id="loading" class="loading-overlay">
         <div class="text-center">
             <div class="spinner-border text-primary mb-2" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
-            <div class="text-muted small fw-bold">Menghubungkan Server...</div>
+            <div class="text-muted small fw-bold">Memuat Data Billing...</div>
         </div>
     </div>
 
@@ -81,20 +85,20 @@
                 <i class="fa-solid fa-gamepad me-1 text-info"></i> BILLING PS DODI JAYA
             </span>
             <button class="btn btn-info btn-sm text-white fw-bold px-3 py-1" style="border-radius: 8px;" onclick="muatData()">
-                <i class="fa-solid fa-rotate shadow-sm"></i>
+                <i class="fa-solid fa-rotate"></i> REFRESH
             </button>
         </div>
     </nav>
 
-    <div class="container-fluid px-3 mt-3 mb-5">
-        <div class="row g-3" id="container-ps"></div>
+    <div class="container-fluid px-3 mt-3">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" id="container-ps"></div>
     </div>
 
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
     <script>
-        // URL API Otomatis Mengarah Ke Web App Milik Anda
+        // URL Google Apps Script Anda
         const API_URL = "https://script.google.com/macros/s/AKfycbwG6ziAwlZpX3b0bvOZJkTn_od5RLOYFXVxLAzLkBLHGN2Yvy5oCjWwhzp6iUcnmrHA/exec";
 
         let menuJajananGlobal = [];
@@ -105,15 +109,37 @@
         });
 
         function toggleLoading(show) {
-            if (show) $('#loading').fadeIn(100);
-            else $('#loading').fadeOut(100);
+            if (show) $('#loading').show();
+            else $('#loading').fadeOut(150);
         }
 
+        // Fungsi fetch data yang dimodifikasi menggunakan metode Fetch API murni agar stabil di Android
         function muatData() {
             toggleLoading(true);
             Object.keys(timerIntervals).forEach(key => clearInterval(timerIntervals[key]));
             timerIntervals = {};
 
+            const urlDenganAksi = `${API_URL}?action=getAppData`;
+
+            fetch(urlDenganAksi)
+                .then(response => response.json())
+                .then(response => {
+                    toggleLoading(false);
+                    if (response.error) {
+                        alert("Error Server: " + response.error);
+                        return;
+                    }
+                    menuJajananGlobal = response.menu || [];
+                    renderDashboard(response.ps || []);
+                })
+                .catch(error => {
+                    toggleLoading(false);
+                    // Alternatif fallback ke JSONP jika fetch langsung diblokir oleh browser local file Android
+                    muatDataJSONP();
+                });
+        }
+
+        function muatDataJSONP() {
             $.ajax({
                 url: API_URL,
                 jsonp: "callback",
@@ -122,15 +148,15 @@
                 success: function(response) {
                     toggleLoading(false);
                     if (response.error) {
-                        alert("Error: " + response.error);
+                        alert("Error Server: " + response.error);
                         return;
                     }
-                    menuJajananGlobal = response.menu;
-                    renderDashboard(response.ps);
+                    menuJajananGlobal = response.menu || [];
+                    renderDashboard(response.ps || []);
                 },
                 error: function() {
                     toggleLoading(false);
-                    alert("Koneksi gagal terhubung.");
+                    alert("Gagal memuat data. Periksa koneksi internet Anda atau pastikan Deployment Apps Script sudah diatur ke 'Anyone'.");
                 }
             });
         }
@@ -144,13 +170,13 @@
                 const badgeClass = isMain ? "bg-main" : "bg-tersedia";
                 const statusLabel = isMain ? ps.status : "Tersedia";
 
-                let opsiJajanan = `<option value="">-- Jajanan Kasir --</option>`;
+                let opsiJajanan = `<option value="">-- Pilih Jajanan Kasir --</option>`;
                 menuJajananGlobal.forEach(item => {
                     opsiJajanan += `<option value="${item[1]}" data-nama="${item[0]}">${item[0]} (Rp${Number(item[1]).toLocaleString('id-ID')})</option>`;
                 });
 
-                let textJajanan = "Belum belanja";
-                let jajanBadgeClass = "text-danger text-decoration-underline";
+                let textJajanan = "Belum jajan";
+                let jajanBadgeClass = "text-danger";
                 if (ps.selesai && ps.selesai.includes(" | Jrn: ")) {
                     textJajanan = ps.selesai.split(" | Jrn: ")[1];
                     jajanBadgeClass = "text-success fw-bold";
@@ -159,7 +185,7 @@
                 let jamSelesaiMurni = ps.selesai ? ps.selesai.split(" | ")[0] : "";
 
                 let cardHtml = `
-                <div class="col-12 col-md-6 col-lg-4">
+                <div class="col">
                     <div class="card card-ps">
                         <div class="d-flex justify-content-between align-items-center mb-3">
                             <h4 class="fw-bold m-0 text-dark"><i class="fa-solid fa-tv me-1 text-primary"></i> ${ps.noPS}</h4>
@@ -180,14 +206,14 @@
                                     <div class="fw-bold text-danger fs-5 mt-1" id="timer-${ps.noPS}">00:00:00</div>
                                 </div>
                             ` : `
-                                <input type="number" class="form-control" id="jam-${ps.noPS}" placeholder="Durasi Main (Jam). Misal: 2" step="0.5" min="0.5" inputmode="decimal">
+                                <input type="number" class="form-control" id="jam-${ps.noPS}" placeholder="Berapa Jam? Misal: 2" step="0.5" min="0.5" inputmode="decimal">
                             `}
                         </div>
 
                         <div class="mb-3">
                             ${isMain ? `
                                 <button class="btn btn-danger btn-custom w-100 shadow-sm" onclick="stopBilling('${ps.noPS}', ${ps.biaya})">
-                                    <i class="fa-solid fa-stopwatch me-2"></i> STOP (Rp${ps.biaya.toLocaleString('id-ID')})
+                                    <i class="fa-solid fa-stopwatch me-2"></i> STOP BILLING (Rp${ps.biaya.toLocaleString('id-ID')})
                                 </button>
                             ` : `
                                 <button class="btn btn-start btn-custom w-100 shadow-sm" onclick="startBilling('${ps.noPS}')">
@@ -210,7 +236,7 @@
                                 </div>
                             </div>
                             <div class="mt-2 text-dark" style="font-size: 0.85rem;">
-                                <b>Item:</b> <span class="${jajanBadgeClass}">${textJajanan}</span>
+                                <b>Jajanan:</b> <span class="${jajanBadgeClass}">${textJajanan}</span>
                             </div>
                         </div>
 
@@ -233,7 +259,7 @@
                 let target = new Date();
                 target.setHours(parseInt(partWaktu[0], 10), parseInt(partWaktu[1], 10), 0, 0);
 
-                if (target < brass_time = sekarang) {
+                if (target < sekarang) {
                     target.setDate(target.getDate() + 1);
                 }
 
@@ -256,6 +282,24 @@
             timerIntervals[id] = setInterval(hitung, 1000);
         }
 
+        function membuatPermintaan(dataParameter) {
+            toggleLoading(true);
+            $.ajax({
+                url: API_URL,
+                jsonp: "callback",
+                dataType: "jsonp",
+                data: dataParameter,
+                success: function(res) {
+                    if (res.success) muatData();
+                    else { alert("Gagal: " + res.error); toggleLoading(false); }
+                },
+                error: function() {
+                    toggleLoading(false);
+                    alert("Koneksi gagal saat mengirim data.");
+                }
+            });
+        }
+
         function startBilling(id) {
             const jam = $(`#jam-${id}`).val();
             const tipe = $(`#tipe-${id}`).val();
@@ -264,18 +308,7 @@
                 alert("Harap isi angka durasi bermain!");
                 return;
             }
-
-            toggleLoading(true);
-            $.ajax({
-                url: API_URL,
-                jsonp: "callback",
-                dataType: "jsonp",
-                data: { action: "mulaiMain", id: id, jam: jam, tipe: tipe },
-                success: function(res) {
-                    if (res.success) muatData();
-                    else { alert("Gagal: " + res.error); toggleLoading(false); }
-                }
-            });
+            membuatPermintaan({ action: "mulaiMain", id: id, jam: jam, tipe: tipe });
         }
 
         function beliJajanan(id) {
@@ -287,36 +320,14 @@
                 alert("Pilih jajanan dulu!");
                 return;
             }
-
-            toggleLoading(true);
-            $.ajax({
-                url: API_URL,
-                jsonp: "callback",
-                dataType: "jsonp",
-                data: { action: "tambahJajanan", id: id, nama: nama, harga: harga },
-                success: function(res) {
-                    if (res.success) muatData();
-                    else { alert("Gagal: " + res.error); toggleLoading(false); }
-                }
-            });
+            membuatPermintaan({ action: "tambahJajanan", id: id, nama: nama, harga: harga });
         }
 
         function stopBilling(id, totalBiaya) {
             if (!confirm(`Total Tagihan ${id}: Rp${totalBiaya.toLocaleString('id-ID')}\n\nSimpan nota ke Excel Laporan & Reset?`)) {
                 return;
             }
-
-            toggleLoading(true);
-            $.ajax({
-                url: API_URL,
-                jsonp: "callback",
-                dataType: "jsonp",
-                data: { action: "resetPS", id: id },
-                success: function(res) {
-                    if (res.success) muatData();
-                    else { alert("Gagal: " + res.error); toggleLoading(false); }
-                }
-            });
+            membuatPermintaan({ action: "resetPS", id: id });
         }
     </script>
 </body>
