@@ -18,7 +18,6 @@
         .btn-start { background-color: #1e293b; color: white; border: none; }
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; }
 
-        /* REKAYASA HALAMAN PRINT STRUK KERTAS KASIR (58mm) */
         @media print {
             body * { visibility: hidden; }
             #area-cetak, #area-cetak * { visibility: visible; }
@@ -57,8 +56,8 @@
     </div>
 
     <script>
-        // URL SCRIPT ANDA YANG SUDAH TERINTEGRASI SEMPURNA
-        const API_URL = "https://script.google.com/macros/s/AKfycbyBRpnnSv7d5ur3xH2fISXJ4hQXiY_-vaSFOTOndifLy3nVEinEu3wA-jDgCZAIK5wF/exec";
+        // URL WEB APP BARU ANDA SUDAH TERPASANG SEMPURNA DI SINI
+        const API_URL = "https://script.google.com/macros/s/AKfycbyK3TOq28xuC2cVtflqs9HAhRGxBuKa5teFitSBRtFrEJfUBwf-iszDQV9TxXmn0AB3/exec";
         
         let menuJajananGlobal = [];
         let timerIntervals = {};
@@ -132,7 +131,7 @@
                                     <div class="fw-bold text-danger fs-5 mt-1" id="timer-${ps.noPS}">00:00:00</div>
                                 </div>
                             ` : `
-                                <input type="number" class="form-control" id="jam-${ps.noPS}" placeholder="Berapa jam? misal: 2" step="0.5" min="0.5" inputmode="decimal">
+                                <input type="number" class="form-control" id="jam-${ps.noPS}" placeholder="Berapa jam?" step="0.5" min="0.5" inputmode="decimal">
                             `}
                         </div>
                         <div class="mb-3">
@@ -193,7 +192,7 @@
             const callbackName = 'act_' + Date.now() + Math.round(100 * Math.random());
             
             window[callbackName] = function(res) {
-                if (res.success) { muatData(); } else { toggleLoading(false); }
+                if (res && res.success) { muatData(); } else { toggleLoading(false); }
                 cleanupScript(callbackName);
                 delete window[callbackName];
             };
@@ -259,7 +258,6 @@
             window.print();
         }
 
-        // PERBAIKAN TOTAL: Menghubungkan langsung ke endpoint tab Laporan
         function ambilDanCetakLaporan() {
             toggleLoading(true);
             const callbackName = 'report_' + Date.now() + Math.round(100 * Math.random());
