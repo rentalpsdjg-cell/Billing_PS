@@ -57,6 +57,7 @@
 </div>
 
 <script>
+  // PASTIKAN URL INI MATCH DENGAN DEPLOYMENT WEB APP ANDA
   const GOOGLE_SCRIPT_URL = "https://script.google.com/macros/s/AKfycbyuZZn52NlwNehwSV_rbxZXC0318hUgxaX9AvedQEsIn6OKKTiO9JVaCsEWkVEVFtfx/exec";
   
   window.SistemKasir = {
@@ -121,7 +122,6 @@
         }
       });
 
-      // Filter Pemotongan teks Tanggal 1899 agar murni jam-menit
       let jamSelesaiTampil = item.selesai || "";
       let riwayatJajananTeks = "";
       if (item.selesai && item.selesai.indexOf(" | Jrn:") !== -1) {
@@ -129,10 +129,10 @@
         jamSelesaiTampil = bagian[0];
         riwayatJajananTeks = bagian[1];
       }
-      
-      var cekMatch = jamSelesaiTampil.match(/(\d{2}):(\d{2})/);
-      if (cekMatch) {
-        jamSelesaiTampil = cekMatch[1] + ":" + cekMatch[2];
+
+      // Pastikan string tanggal/bulan kotor dibersihkan kembali ke HH:mm saja
+      if(jamSelesaiTampil.includes("/")) {
+         jamSelesaiTampil = "Sedang Main";
       }
 
       const col = document.createElement('div');
@@ -186,7 +186,7 @@
       col.innerHTML = cardHTML;
       container.appendChild(col);
 
-      if (isMain && jamSelesaiTampil) {
+      if (isMain && jamSelesaiTampil && jamSelesaiTampil !== "Sedang Main") {
         runTimerPintar(item.noPS, jamSelesaiTampil);
       }
     });
@@ -229,7 +229,7 @@
       hitung();
       intervals[id] = setInterval(hitung, 1000);
     } catch(e) {
-      console.log("Error running timer:", e);
+      console.log(e);
     }
   }
 
@@ -260,7 +260,7 @@
   }
 
   function cetakNotaLangsung(id) {
-    const item = dataPSGlobal.find(p => p.find && p.noPS === id || p.noPS === id);
+    const item = dataPSGlobal.find(p => p.noPS === id);
     if (!item) return alert("Gagal mencetak nota.");
     let riwayat = "Tidak ada jajanan";
     if (item.selesai && item.selesai.indexOf(" | Jrn:") !== -1) riwayat = item.selesai.split(" | Jrn:")[1];
@@ -273,22 +273,10 @@
     setTimeout(function(){ win.print(); win.close(); }, 250);
   }
 
-  // MODUL FIX CETAK PDF SIAP PRINT UNTUK TAB LAPORAN
+  // REVOLUSI REDIRECT: Membuka link printer bawaan Google Sheets agar terhindar dari error 'Unable to open file'
   function bukaLaporanBulanan() {
-    var spreadsheetId = "1q5l7KVYd8fxtXeVzOc3kV3ekuwQ2iSyFqgZaEk0NPkE";
-    var gidLaporan = "1114515535"; 
-    
-    var urlPrint = "https://docs.google.com/spreadsheets/d/" + spreadsheetId + "/export?exportFormat=pdf&format=pdf" + 
-                   "&size=A4" +             
-                   "&portrait=true" +       
-                   "&fitw=true" +           
-                   "&gridlines=true" +      
-                   "&printtitle=false" + 
-                   "&sheetnames=false" + 
-                   "&fzr=false" + 
-                   "&gid=" + gidLaporan;
-    
-    window.open(urlPrint, "_blank");
+    var URL_SPREADSHEET = "https://docs.google.com/spreadsheets/d/1q5l7KVYd8fxtXeVzOc3kV3ekuwQ2iSyFqgZaEk0NPkE/edit#gid=1114515535";
+    window.open(URL_SPREADSHEET, "_blank");
   }
 
   window.onload = load;
