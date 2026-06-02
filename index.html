@@ -77,9 +77,9 @@
     <div class="grid" id="container-ps"></div>
 
     <script>
-        // API URL Web App Terbaru Anda
         const API_URL = "https://script.google.com/macros/s/AKfycbyK3TOq28xuC2cVtflqs9HAhRGxBuKa5teFitSBRtFrEJfUBwf-iszDQV9TxXmn0AB3/exec";
         let menuJajananGlobal = [];
+        let timerIntervals = {};
 
         document.addEventListener("DOMContentLoaded", function() {
             muatData();
@@ -92,6 +92,11 @@
 
         function muatData() {
             toggleLoading(true);
+            
+            // Hapus interval timer lama agar tidak tumpang tindih & bikin lemot HP
+            Object.keys(timerIntervals).forEach(key => clearInterval(timerIntervals[key]));
+            timerIntervals = {};
+
             const cb = 'j_' + Date.now() + Math.round(100 * Math.random());
             window[cb] = function(res) {
                 toggleLoading(false);
@@ -128,8 +133,9 @@
                             <span class="badge ${isMain ? 'bg-busy' : 'bg-ok'}">${isMain ? ps.status : 'Tersedia'}</span>
                         </div>
                         ${isMain ? `
-                            <div style="background: #0f172a; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; margin-bottom: 10px; border: 1px solid #334155;">
-                                <span style="color: #94a3b8;">Selesai Jam:</span> <b style="color: #f87171; font-size: 13px;">${ps.selesai}</b>
+                            <div style="background: #0f172a; padding: 8px; border-radius: 6px; text-align: center; margin-bottom: 10px; border: 1px solid #334155;">
+                                <div style="color: #94a3b8; font-size: 11px;">Mulai: <b>${ps.mulai}</b> | Selesai: <b>${ps.selesai}</b></div>
+                                <div style="color: #f87171; font-weight: bold; font-size: 16px; margin-top: 4px;" id="timer-${ps.noPS}">⏳ 00:00:00</div>
                             </div>
                             <button class="btn-action btn-stop" onclick="stopBilling('${ps.noPS}', ${ps.biaya}, '${ps.mulai}', '${ps.selesai}', '${ps.jajanan || '-'}')">🛑 STOP & PRINT (Rp${ps.biaya.toLocaleString('id-ID')})</button>
                         ` : `
@@ -150,7 +156,43 @@
                     </div>
                 `;
                 container.appendChild(card);
+
+                // Jalankan fungsi hitung mundur real-time jika status sedang main
+                if (isMain && ps.selesai) { 
+                    initLiveTimer(ps.noPS, ps.selesai); 
+                }
             });
+        }
+
+        function initLiveTimer(id, jamSelesaiStr) {
+            function hitung() {
+                const sekarang = new Date();
+                const partWaktu = jamSelesaiStr.split(":");
+                if(partWaktu.length < 2) return;
+                
+                let target = new Date();
+                target.setHours(parseInt(partWaktu[0], 10), parseInt(partWaktu[1], 10), 0, 0);
+                
+                if (target < sekarang) target.setDate(target.getDate() + 1);
+                
+                const selisih = target - sekarang;
+                const elemenTimer = document.getElementById(`timer-${id}`);
+                if (!elemenTimer) return;
+                
+                if (selisih <= 0) { 
+                    elemenTimer.innerHTML = `🛑 SELESAI!`; 
+                    clearInterval(timerIntervals[id]); 
+                    return; 
+                }
+                
+                const jam = Math.floor(selisih / (1000 * 60 * 60));
+                const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60));
+                const detik = Math.floor((selisih % (1000 * 60)) / 1000);
+                
+                elemenTimer.innerHTML = `⏳ ${jam.toString().padStart(2,'0')}:${menit.toString().padStart(2,'0')}:${detik.toString().padStart(2,'0')}`;
+            }
+            hitung();
+            timerIntervals[id] = setInterval(hitung, 1000);
         }
 
         function jalankanAksi(params) {
