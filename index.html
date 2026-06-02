@@ -13,6 +13,8 @@
     .btn { padding: 10px 16px; font-weight: bold; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; font-size: 0.9rem; }
     .btn-dark { background-color: #2c3e50; color: white; }
     .btn-dark:hover { background-color: #1a252f; }
+    .btn-info { background-color: #2980b9; color: white; }
+    .btn-info:hover { background-color: #21618c; }
     .btn-success { background-color: #2ecc71; color: white; width: 100%; margin-top: 5px; }
     .btn-danger { background-color: #e74c3c; color: white; width: 100%; margin-top: 5px; margin-bottom: 8px; }
     .btn-warning { background-color: #f1c40f; color: #333; width: 100%; margin-top: 5px; font-weight: bold; }
@@ -44,8 +46,9 @@
 <div class="header-bar">
   <h2 class="title">BILLING PS DODI JAYA</h2>
   <div class="btn-group-header">
-    <button onclick="bukaLaporanBulanan()" class="btn btn-dark">📊 CETAK BULANAN</button>
-    <button onclick="load()" class="btn btn-dark">🔄 REFRESH DATA</button>
+    <button onclick="hitungOmsetBulanan()" class="btn btn-info">🧮 HITUNG HASIL BULANAN</button>
+    <button onclick="bukaLaporanBulanan()" class="btn btn-dark">📊 CETAK REKAP</button>
+    <button onclick="load()" class="btn btn-dark">🔄 REFRESH</button>
   </div>
 </div>
 
@@ -79,7 +82,8 @@
     getAppData: function() { this.panggilServer("?action=getAppData"); },
     mulaiMain: function(id, jam, tipe) { this.panggilServer(`?action=mulaiMain&id=${id}&jam=${jam}&tipe=${tipe}`); },
     tambahJajananKeSheet: function(id, nama, harga) { this.panggilServer(`?action=tambahJajanan&id=${id}&nama=${encodeURIComponent(nama)}&harga=${harga}`); },
-    resetPS: function(id) { this.panggilServer(`?action=resetPS&id=${id}`); }
+    resetPS: function(id) { this.panggilServer(`?action=resetPS&id=${id}`); },
+    hitungBulanan: function() { this.panggilServer("?action=hitungBulanan"); }
   };
 
   let intervals = {};
@@ -197,7 +201,7 @@
         if (target.getTime() < sekarang.getTime() && (sekarang.getTime() - target.getTime() > 6 * 60 * 60 * 1000)) {
           target.setDate(target.getDate() + 1);
         }
-        const diff = target.getTime() - sekarang.getTime();
+        const diff = target.getTime() - brass = sekarang.getTime();
         const el = document.getElementById('t-' + id);
         if (!el) return;
         if (diff <= 0) { 
@@ -241,6 +245,24 @@
     }
   }
 
+  function hitungOmsetBulanan() {
+    document.getElementById('content').innerHTML = '<div class="loading-screen"><div class="spinner"></div><h3>Menghitung Hasil Omset...</h3></div>';
+    SistemKasir.withSuccessHandler(function(hasil) {
+      load();
+      setTimeout(function() {
+        alert(
+          "=========================\n" +
+          "   REKAP HASIL BULANAN   \n" +
+          "=========================\n\n" +
+          "• Total Transaksi : " + hasil.totalTransaksi + " Sesi\n" +
+          "• Total Jam Main  : " + hasil.totalDurasi + " Jam\n" +
+          "• TOTAL OMSET     : Rp " + hasil.totalOmset.toLocaleString('id-ID') + "\n\n" +
+          "========================="
+        );
+      }, 500);
+    }).withFailureHandler(tanganiError).hitungBulanan();
+  }
+
   function cetakNotaLangsung(id) {
     const item = dataPSGlobal.find(p => p.noPS === id);
     if (!item) return alert("Gagal mencetak nota.");
@@ -255,7 +277,6 @@
     setTimeout(function(){ win.print(); win.close(); }, 300);
   }
 
-  // AMAN TOTAL: Membuka cetak PDF lembar Laporan secara instan tanpa terblokir sistem Google Drive
   function bukaLaporanBulanan() {
     var URL_PRINT_PDF = "https://docs.google.com/spreadsheets/d/1q5l7KVYd8fxtXeVzOc3kV3ekuwQ2iSyFqgZaEk0NPkE/export?format=pdf&gid=1114515535&size=A4&portrait=true&fitw=true&gridlines=true";
     window.open(URL_PRINT_PDF, "_blank");
