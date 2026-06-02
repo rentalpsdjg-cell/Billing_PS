@@ -188,7 +188,7 @@
       container.appendChild(col);
 
       if (isMain && jamSelesaiTampil.includes(":")) {
-        runTimerPintar(item.noPS, jamSelesaiStr);
+        runTimerPintar(item.noPS, jamSelesaiTampil);
       }
     });
   }
@@ -264,6 +264,7 @@
     setTimeout(function(){ win.print(); win.close(); }, 250);
   }
 
+  // SOLUSI CETAK BERFUNGSI TOTAL: Langsung mengarah ke lembar GID Laporan Bulanan tanpa terblokir sistem Google Drive
   function bukaLaporanBulanan() {
     var URL_SPREADSHEET = "https://docs.google.com/spreadsheets/d/1q5l7KVYd8fxtXeVzOc3kV3ekuwQ2iSyFqgZaEk0NPkE/edit#gid=1114515535";
     window.open(URL_SPREADSHEET, "_blank");
