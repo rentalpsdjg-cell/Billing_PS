@@ -3,47 +3,73 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BILLING PS</title>
+    <title>BILLING PS - DODI JAYA</title>
     <style>
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-        body { background: #e2e8f0; color: #1e293b; padding-bottom: 20px; }
-        header { background: #0f172a; color: white; padding: 12px; position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; z-index: 10; }
-        h1 { font-size: 14px; }
-        .btn-top { background: #f59e0b; border: none; padding: 6px 10px; font-size: 11px; font-weight: bold; border-radius: 4px; cursor: pointer; }
-        .btn-refresh { background: #0ea5e9; color: white; margin-left: 5px; }
-        .grid { padding: 10px; display: grid; grid-template-columns: 1fr; gap: 10px; }
-        @media(min-width: 600px) { .grid { grid-template-columns: 1fr 1fr; } }
-        .card { background: white; border-radius: 8px; padding: 12px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-        .row-card { display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-        .title { font-size: 16px; font-weight: bold; }
-        .badge { padding: 3px 8px; font-size: 11px; border-radius: 12px; font-weight: bold; color: white; }
-        .bg-ok { background: #10b981; }
-        .bg-busy { background: #ef4444; }
-        select, input { width: 100%; height: 36px; padding: 5px; margin-bottom: 8px; border: 1px solid #cbd5e1; border-radius: 4px; font-size: 13px; }
-        .btn-action { width: 100%; height: 38px; border: none; border-radius: 4px; font-weight: bold; font-size: 13px; cursor: pointer; }
-        .btn-go { background: #1e293b; color: white; }
-        .btn-stop { background: #ef4444; color: white; }
-        .jajan-box { background: #fffbeb; border: 1px dashed #f59e0b; padding: 8px; border-radius: 6px; margin-top: 8px; font-size: 12px; }
-        .jajan-flex { display: flex; gap: 5px; margin-bottom: 4px; }
-        .jajan-flex select { margin-bottom: 0; width: 75%; height: 32px; }
-        .btn-add { width: 25%; height: 32px; background: #f59e0b; color: white; border: none; border-radius: 4px; font-weight: bold; }
-        #loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.8); display: flex; justify-content: center; align-items: center; font-size: 13px; font-weight: bold; z-index: 100; }
+        /* CSS SPEK DEWA: Super Ringan, Efek Modern, Bebas Framework Berat */
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        body { background: #0f172a; color: #f8fafc; padding-bottom: 30px; }
         
+        /* Header Modern */
+        header { background: #1e293b; padding: 14px 16px; position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; z-index: 10; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
+        h1 { font-size: 15px; font-weight: 800; letter-spacing: 0.5px; color: #38bdf8; }
+        
+        /* Tombol Navigasi */
+        .btn-group { display: flex; gap: 6px; }
+        .btn-top { border: none; padding: 8px 12px; font-size: 11px; font-weight: 700; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: opacity 0.2s; }
+        .btn-rekap { background: #f59e0b; color: #1e293b; }
+        .btn-refresh { background: #38bdf8; color: #1e293b; }
+        .btn-top:active { opacity: 0.7; }
+        
+        /* Grid Layout */
+        .grid { padding: 12px; display: grid; grid-template-columns: 1fr; gap: 12px; }
+        @media(min-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+        @media(min-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
+        
+        /* Kartu PS Premium */
+        .card { background: #1e293b; border-radius: 12px; padding: 14px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: space-between; }
+        .row-card { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+        .title { font-size: 16px; font-weight: 700; color: #fff; }
+        
+        /* Badge Status Kasir */
+        .badge { padding: 4px 10px; font-size: 11px; border-radius: 50px; font-weight: 700; text-transform: uppercase; }
+        .bg-ok { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
+        .bg-busy { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
+        
+        /* Form Elemen Minimalis */
+        select, input { width: 100%; height: 40px; padding: 0 10px; margin-bottom: 10px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; font-size: 13px; font-weight: 500; outline: none; -webkit-appearance: none; }
+        select:focus, input:focus { border-color: #38bdf8; }
+        
+        /* Tombol Aksi Kasir */
+        .btn-action { width: 100%; height: 42px; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s; }
+        .btn-go { background: #38bdf8; color: #0f172a; }
+        .btn-stop { background: #ef4444; color: #fff; }
+        
+        /* Kotak Jajanan Modern */
+        .jajan-box { background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; margin-top: 12px; }
+        .jajan-flex { display: flex; gap: 6px; margin-bottom: 6px; }
+        .jajan-flex select { margin-bottom: 0; flex-grow: 1; height: 34px; }
+        .btn-add { width: 40px; height: 34px; background: #f59e0b; color: #1e293b; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .jajan-text { color: #94a3b8; font-size: 11px; }
+        
+        /* Loading Overlay Mulus */
+        #loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.85); display: flex; justify-content: center; align-items: center; font-size: 13px; font-weight: 700; color: #38bdf8; z-index: 100; backdrop-filter: blur(2px); }
+        
+        /* Area Cetak Struk Kasir */
         @media print {
             body * { visibility: hidden; }
             #area-cetak, #area-cetak * { visibility: visible; }
-            #area-cetak { position: absolute; left:0; top:0; width: 54mm; font-family: monospace; font-size: 10px; }
+            #area-cetak { position: absolute; left:0; top:0; width: 54mm; font-family: monospace; font-size: 10px; color: #000; background: #fff; padding: 5px; }
         }
     </style>
 </head>
 <body>
     <div id="area-cetak"></div>
-    <div id="loading">Memuat Data...</div>
+    <div id="loading">MENGHUBUNGKAN SERVER...</div>
 
     <header>
         <h1>🎮 BILLING DODI JAYA</h1>
-        <div>
-            <button class="btn-top" onclick="ambilDanCetakLaporan()">📊 REKAP</button>
+        <div class="btn-group">
+            <button class="btn-top btn-rekap" onclick="ambilDanCetakLaporan()">📊 REKAP</button>
             <button class="btn-top btn-refresh" onclick="muatData()">🔄 REFRESH</button>
         </div>
     </header>
@@ -51,6 +77,7 @@
     <div class="grid" id="container-ps"></div>
 
     <script>
+        // API URL Web App Terbaru Anda
         const API_URL = "https://script.google.com/macros/s/AKfycbyK3TOq28xuC2cVtflqs9HAhRGxBuKa5teFitSBRtFrEJfUBwf-iszDQV9TxXmn0AB3/exec";
         let menuJajananGlobal = [];
 
@@ -85,7 +112,7 @@
             if(!container) return;
             container.innerHTML = '';
             
-            let opsiJajanan = `<option value="">-- Pilih Jajanan --</option>`;
+            let opsiJajanan = `<option value="">+ Tambah Jajanan Kasir</option>`;
             menuJajananGlobal.forEach(m => {
                 opsiJajanan += `<option value="${m[1]}" data-nama="${m[0]}">${m[0]} (Rp${Number(m[1]).toLocaleString('id-ID')})</option>`;
             });
@@ -95,29 +122,31 @@
                 const card = document.createElement('div');
                 card.className = 'card';
                 card.innerHTML = `
-                    <div class="row-card">
-                        <span class="title">📺 ${ps.noPS}</span>
-                        <span class="badge ${isMain ? 'bg-busy' : 'bg-ok'}">${isMain ? ps.status : 'Tersedia'}</span>
-                    </div>
-                    ${isMain ? `
-                        <div style="background:#f8fafc; padding:6px; border-radius:4px; text-align:center; font-size:12px; margin-bottom:8px;">
-                            Mulai: <b>${ps.mulai}</b> | Selesai: <b>${ps.selesai}</b>
+                    <div>
+                        <div class="row-card">
+                            <span class="title">📺 ${ps.noPS}</span>
+                            <span class="badge ${isMain ? 'bg-busy' : 'bg-ok'}">${isMain ? ps.status : 'Tersedia'}</span>
                         </div>
-                        <button class="btn-action btn-stop" onclick="stopBilling('${ps.noPS}', ${ps.biaya}, '${ps.mulai}', '${ps.selesai}', '${ps.jajanan || '-'}')">🛑 STOP (Rp${ps.biaya.toLocaleString('id-ID')})</button>
-                    ` : `
-                        <select id="tipe-${ps.noPS}">
-                            <option value="PS3">PS3 (Rp5.000/j)</option>
-                            <option value="PS4">PS4 (Rp10.000/j)</option>
-                        </select>
-                        <input type="number" id="jam-${ps.noPS}" placeholder="Berapa jam? (misal: 2)" step="0.5" min="0.5" inputmode="decimal">
-                        <button class="btn-action btn-go" onclick="startBilling('${ps.noPS}')">START BILLING</button>
-                    `}
+                        ${isMain ? `
+                            <div style="background: #0f172a; padding: 8px; border-radius: 6px; text-align: center; font-size: 12px; margin-bottom: 10px; border: 1px solid #334155;">
+                                <span style="color: #94a3b8;">Selesai Jam:</span> <b style="color: #f87171; font-size: 13px;">${ps.selesai}</b>
+                            </div>
+                            <button class="btn-action btn-stop" onclick="stopBilling('${ps.noPS}', ${ps.biaya}, '${ps.mulai}', '${ps.selesai}', '${ps.jajanan || '-'}')">🛑 STOP & PRINT (Rp${ps.biaya.toLocaleString('id-ID')})</button>
+                        ` : `
+                            <select id="tipe-${ps.noPS}">
+                                <option value="PS3">PLAYSTATION 3 (Rp5.000/j)</option>
+                                <option value="PS4">PLAYSTATION 4 (Rp10.000/j)</option>
+                            </select>
+                            <input type="number" id="jam-${ps.noPS}" placeholder="Berapa jam bermain? (misal: 2)" step="0.5" min="0.5" inputmode="decimal">
+                            <button class="btn-action btn-go" onclick="startBilling('${ps.noPS}')">⚡ MULAI MAIN</button>
+                        `}
+                    </div>
                     <div class="jajan-box">
                         <div class="jajan-flex">
                             <select id="jajan-${ps.noPS}" ${!isMain ? 'disabled' : ''}>${opsiJajanan}</select>
-                            <button class="btn-add" onclick="beliJajanan('${ps.noPS}')" ${!isMain ? 'disabled' : ''}>➕</button>
+                            <button class="btn-add" onclick="beliJajanan('${ps.noPS}')" ${!isMain ? 'disabled' : ''}>+</button>
                         </div>
-                        <div style="color:#475569; font-size:11px;">Jajan: <span style="font-weight:bold; color:${ps.jajanan ? '#10b981':'#ef4444'}">${ps.jajanan || 'Belum jajan'}</span></div>
+                        <div class="jajan-text">Item: <span style="font-weight:700; color:${ps.jajanan ? '#34d399':'#f87171'}">${ps.jajanan || 'Belum jajan'}</span></div>
                     </div>
                 `;
                 container.appendChild(card);
@@ -142,19 +171,19 @@
 
         function startBilling(id) {
             const jam = document.getElementById(`jam-${id}`).value;
-            if (!jam || jam <= 0) return alert("Isi durasi bermain!");
+            if (!jam || jam <= 0) return alert("Silakan isi durasi bermain!");
             jalankanAksi({ action: "mulaiMain", id: id, jam: jam, tipe: document.getElementById(`tipe-${id}`).value });
         }
 
         function beliJajanan(id) {
             const el = document.getElementById(`jajan-${id}`);
-            if (!el.value) return alert("Pilih menu jajanan!");
+            if (!el.value) return alert("Pilih menu jajanan dulu!");
             jalankanAksi({ action: "tambahJajanan", id: id, nama: el.options[el.selectedIndex].getAttribute('data-nama'), harga: el.value });
         }
 
         function stopBilling(id, total, mulai, selesai, jajanan) {
-            if (!confirm(`STOP ${id}?\nTotal: Rp${total.toLocaleString('id-ID')}`)) return;
-            buatStruk(id, "STRUK KASIR", mulai, selesai, total, jajanan);
+            if (!confirm(`Hentikan ${id}?\nTotal Tagihan: Rp${total.toLocaleString('id-ID')}`)) return;
+            buatStruk(id, "STRUK NOTA RESMI", mulai, selesai, total, jajanan);
             jalankanAksi({ action: "resetPS", id: id });
         }
 
@@ -168,14 +197,15 @@
             if(!area) return;
             const tgl = new Date().toLocaleDateString('id-ID') + " " + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
             area.innerHTML = `
-                <div style="text-align:center; font-weight:bold;">PS DODI JAYA</div>
+                <div style="text-align:center; font-weight:bold; font-size:12px;">PS DODI JAYA</div>
                 <div style="text-align:center; font-size:8px;">${judul}</div>
-                <div style="border-bottom:1px dashed #000; margin:2px 0;"></div>
-                <div style="font-size:9px;">Waktu: ${tgl}<br>Unit: ${id}<br>Jam: ${mulai} - ${selesai}</div>
-                <div style="border-bottom:1px dashed #000; margin:2px 0;"></div>
-                <div style="font-size:8px;">Jajanan:<br>${jajanan}</div>
-                <div style="border-bottom:1px dashed #000; margin:2px 0;"></div>
-                <div style="font-weight:bold;">TOTAL: Rp${total.toLocaleString('id-ID')}</div>
+                <div style="border-bottom:1px dashed #000; margin:3px 0;"></div>
+                <div style="font-size:9px;">Waktu: ${tgl}<br>Unit : ${id}<br>Durasi: ${mulai} - ${selesai}</div>
+                <div style="border-bottom:1px dashed #000; margin:3px 0;"></div>
+                <div style="font-size:8px;">Rincian Jajanan:<br>${jajanan}</div>
+                <div style="border-bottom:1px dashed #000; margin:3px 0;"></div>
+                <div style="font-weight:bold; font-size:11px;">TOTAL: Rp${total.toLocaleString('id-ID')}</div>
+                <div style="text-align:center; font-size:8px; margin-top:4px;">Terima Kasih!</div>
             `;
             window.print();
         }
@@ -186,13 +216,13 @@
             window[cb] = function(res) {
                 toggleLoading(false);
                 if (!res || !res.laporan) return;
-                let h = `<div style="text-align:center; font-weight:bold;">OMSET LIVE</div><div style="border-bottom:1px dashed #000; margin:2px 0;"></div>`;
+                let h = `<div style="text-align:center; font-weight:bold; font-size:11px;">REKAP OMSET LIVE</div><div style="border-bottom:1px dashed #000; margin:3px 0;"></div>`;
                 let total = 0;
                 res.laporan.forEach(i => {
-                    h += `<div style="font-size:8px;">${i.noPS} (${i.tanggal.split(' ')[1] || ''}) : Rp${i.pendapatan.toLocaleString('id-ID')}</div>`;
+                    h += `<div style="font-size:8px; margin-bottom:2px;">${i.noPS} (${i.tanggal.split(' ')[1] || ''}) : <b>Rp${i.pendapatan.toLocaleString('id-ID')}</b></div>`;
                     total += i.pendapatan;
                 });
-                h += `<div style="border-bottom:1px dashed #000; margin:2px 0;"></div><div style="font-weight:bold;">TOTAL: Rp${total.toLocaleString('id-ID')}</div>`;
+                h += `<div style="border-bottom:1px dashed #000; margin:3px 0;"></div><div style="font-weight:bold; font-size:11px;">TOTAL OMSET: Rp${total.toLocaleString('id-ID')}</div>`;
                 document.getElementById('area-cetak').innerHTML = h;
                 window.print();
                 cleanupScript(cb);
