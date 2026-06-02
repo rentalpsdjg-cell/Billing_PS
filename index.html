@@ -65,11 +65,17 @@
       const isMain = item.status.includes("🔴 MAIN") || item.status.includes("🔴 SEWA");
       
       let options = `<option value="">Cari/Pilih Jajanan...</option>`;
-      options += menuGlobal.map(m => {
-        if(!m[1] || m[1] === 0 || m[1] === "") {
+      options += menuGlobal.map((m, index) => {
+        // Validasi struktur data menu dari Google Sheets [Nama Jajanan, Harga]
+        if(!m[0] || m[1] === undefined || m[1] === "") return '';
+        
+        // Jika harga 0 atau teks header, jadikan disabled
+        if(parseInt(m[1]) === 0) {
           return `<option value="" disabled class="fw-bold text-secondary">${m[0]}</option>`;
         }
-        return `<option value="${m[1]}" data-nama="${m[0]}">${m[0]} (Rp${parseInt(m[1]).toLocaleString('id-ID')})</option>`;
+        
+        // Value diisi dengan kombinasi index dan harga agar unik jika ada harga yang sama
+        return `<option value="${index}-${m[1]}" data-nama="${m[0]}" data-harga="${m[1]}">${m[0]} (Rp ${parseInt(m[1]).toLocaleString('id-ID')})</option>`;
       }).join('');
 
       let jamSelesaiTampil = item.selesai;
@@ -144,6 +150,7 @@
       div.innerHTML = htmlContent;
       container.appendChild(div);
       
+      // Inisialisasi Tom Select
       tomSelectInstances[item.noPS] = new TomSelect(`#m-${item.noPS}`, {
         create: false,
         sortField: { field: "text", direction: "asc" },
@@ -182,14 +189,25 @@
     google.script.run.withSuccessHandler(load).mulaiMain(id, parseFloat(jam), tipePS);
   }
 
+  // ---- PERBAIKAN UTAMA PADA INDEKS DAN TOM SELECT ----
   function pesan(id) {
+    const ts = tomSelectInstances[id];
+    if (!ts) return alert("Sistem pencarian bermasalah.");
+
+    constselectedValue = ts.getValue(); // Mengambil value (contoh: "2-5000")
+    if (!selectedValue || selectedValue === "") return alert("Silakan pilih jajanan terlebih dahulu!");
+
+    // Ambil element option asli yang tersembunyi berdasarkan value terpilih
     const selectEl = document.getElementById('m-' + id);
-    if(!selectEl || selectEl.value === "") return alert("Silakan pilih jajanan terlebih dahulu!");
+    const selectedOption = selectEl.querySelector(`option[value="${selectedValue}"]`);
     
-    const harga = parseFloat(selectEl.value);
-    const selectedOption = selectEl.options[selectEl.selectedIndex];
-    const namaJajanan = selectedOption.getAttribute('data-nama') || selectedOption.text;
-    
+    if (!selectedOption) return alert("Data jajanan tidak valid.");
+
+    // Mengambil Nama dan Harga yang benar dari atribut data-
+    const namaJajanan = selectedOption.getAttribute('data-nama');
+    const harga = parseFloat(selectedOption.getAttribute('data-harga'));
+
+    // Kirim data ke Google Apps Script backend
     google.script.run.withSuccessHandler(load).tambahJajananKeSheet(id, namaJajanan, harga);
   }
 
