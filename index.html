@@ -56,7 +56,7 @@
     </div>
 
     <script>
-        // URL WEB APP BARU ANDA SUDAH TERPASANG SEMPURNA DI SINI
+        // URL BARU ANDA SUDAH SAYA PASANG DI SINI
         const API_URL = "https://script.google.com/macros/s/AKfycbyK3TOq28xuC2cVtflqs9HAhRGxBuKa5teFitSBRtFrEJfUBwf-iszDQV9TxXmn0AB3/exec";
         
         let menuJajananGlobal = [];
@@ -68,7 +68,8 @@
         });
 
         function toggleLoading(show) {
-            document.getElementById('loading').style.display = show ? 'flex' : 'none';
+            const loadingEl = document.getElementById('loading');
+            if(loadingEl) loadingEl.style.display = show ? 'flex' : 'none';
         }
 
         function muatData() {
@@ -96,6 +97,7 @@
 
         function renderDashboard(dataPS) {
             const container = document.getElementById('container-ps');
+            if(!container) return;
             container.innerHTML = '';
 
             dataPS.forEach(ps => {
@@ -206,6 +208,7 @@
             document.body.appendChild(script);
         }
 
+        // AKSI START-STOP
         function startBilling(id) {
             const jam = document.getElementById(`jam-${id}`).value;
             const tipe = document.getElementById(`tipe-${id}`).value;
@@ -235,6 +238,7 @@
 
         function buatKuponThermal(id, judul, mulai, selesai, total, jajanan) {
             const area = document.getElementById('area-cetak');
+            if(!area) return;
             const tgl = new Date().toLocaleDateString('id-ID') + " " + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
             
             area.innerHTML = `
@@ -267,6 +271,7 @@
                 if (!response || !response.laporan) { alert("Gagal memuat riwayat!"); return; }
                 
                 const area = document.getElementById('area-cetak');
+                if(!area) return;
                 const tglHariIni = new Date().toLocaleDateString('id-ID');
                 let barisHTML = "";
                 let grandTotal = 0;
