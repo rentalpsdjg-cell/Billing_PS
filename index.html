@@ -41,10 +41,10 @@
     <div id="loading">Memuat Data...</div>
 
     <header>
-        <h1>🎮 DODI JAYA</h1>
+        <h1>🎮 BILLING DODI JAYA</h1>
         <div>
             <button class="btn-top" onclick="ambilDanCetakLaporan()">📊 REKAP</button>
-            <button class="btn-top btn-refresh" onclick="muatData()">🔄 SEGARKAN</button>
+            <button class="btn-top btn-refresh" onclick="muatData()">🔄 REFRESH</button>
         </div>
     </header>
 
@@ -54,35 +54,40 @@
         const API_URL = "https://script.google.com/macros/s/AKfycbyK3TOq28xuC2cVtflqs9HAhRGxBuKa5teFitSBRtFrEJfUBwf-iszDQV9TxXmn0AB3/exec";
         let menuJajananGlobal = [];
 
-        document.addEventListener("DOMContentLoaded", muatData);
+        document.addEventListener("DOMContentLoaded", function() {
+            muatData();
+        });
 
         function toggleLoading(show) {
-            document.getElementById('loading').style.display = show ? 'flex' : 'none';
+            const loadEl = document.getElementById('loading');
+            if(loadEl) loadEl.style.display = show ? 'flex' : 'none';
         }
 
         function muatData() {
             toggleLoading(true);
-            const cb = 'j_' + Date.now();
+            const cb = 'j_' + Date.now() + Math.round(100 * Math.random());
             window[cb] = function(res) {
                 toggleLoading(false);
-                if (!res) return;
+                if (!res || res.error) return;
                 menuJajananGlobal = res.menu || [];
                 renderDashboard(res.ps || []);
-                document.getElementById(cb).remove();
+                cleanupScript(cb);
                 delete window[cb];
             };
             const s = document.createElement('script');
-            s.id = cb; s.src = `${API_URL}?action=getAppData&callback=${cb}`;
+            s.id = cb; 
+            s.src = `${API_URL}?action=getAppData&callback=${cb}`;
             document.body.appendChild(s);
         }
 
         function renderDashboard(dataPS) {
             const container = document.getElementById('container-ps');
+            if(!container) return;
             container.innerHTML = '';
             
             let opsiJajanan = `<option value="">-- Pilih Jajanan --</option>`;
             menuJajananGlobal.forEach(m => {
-                opsiJajanan += `<option value="${m[1]}" data-nama="${m[0]}">${m[0]} (${Number(m[1])/1000}k)</option>`;
+                opsiJajanan += `<option value="${m[1]}" data-nama="${m[0]}">${m[0]} (Rp${Number(m[1]).toLocaleString('id-ID')})</option>`;
             });
 
             dataPS.forEach(ps => {
@@ -96,7 +101,7 @@
                     </div>
                     ${isMain ? `
                         <div style="background:#f8fafc; padding:6px; border-radius:4px; text-align:center; font-size:12px; margin-bottom:8px;">
-                            Selesai: <b>${ps.selesai}</b>
+                            Mulai: <b>${ps.mulai}</b> | Selesai: <b>${ps.selesai}</b>
                         </div>
                         <button class="btn-action btn-stop" onclick="stopBilling('${ps.noPS}', ${ps.biaya}, '${ps.mulai}', '${ps.selesai}', '${ps.jajanan || '-'}')">🛑 STOP (Rp${ps.biaya.toLocaleString('id-ID')})</button>
                     ` : `
@@ -104,7 +109,7 @@
                             <option value="PS3">PS3 (Rp5.000/j)</option>
                             <option value="PS4">PS4 (Rp10.000/j)</option>
                         </select>
-                        <input type="number" id="jam-${ps.noPS}" placeholder="Berapa jam? (misal: 2)" step="0.5" inputmode="decimal">
+                        <input type="number" id="jam-${ps.noPS}" placeholder="Berapa jam? (misal: 2)" step="0.5" min="0.5" inputmode="decimal">
                         <button class="btn-action btn-go" onclick="startBilling('${ps.noPS}')">START BILLING</button>
                     `}
                     <div class="jajan-box">
@@ -121,44 +126,52 @@
 
         function jalankanAksi(params) {
             toggleLoading(true);
-            const cb = 'a_' + Date.now();
+            const cb = 'a_' + Date.now() + Math.round(100 * Math.random());
             window[cb] = function(res) {
                 muatData();
-                document.getElementById(cb).remove();
+                cleanupScript(cb);
                 delete window[cb];
             };
             let q = `&callback=${cb}`;
             Object.keys(params).forEach(k => q += `&${k}=${encodeURIComponent(params[k])}`);
             const s = document.createElement('script');
-            s.id = cb; s.src = `${API_URL}?${q}`;
+            s.id = cb; 
+            s.src = `${API_URL}?${q}`;
             document.body.appendChild(s);
         }
 
         function startBilling(id) {
             const jam = document.getElementById(`jam-${id}`).value;
-            if (!jam || jam <= 0) return alert("Isi jam!");
+            if (!jam || jam <= 0) return alert("Isi durasi bermain!");
             jalankanAksi({ action: "mulaiMain", id: id, jam: jam, tipe: document.getElementById(`tipe-${id}`).value });
         }
 
         function beliJajanan(id) {
             const el = document.getElementById(`jajan-${id}`);
-            if (!el.value) return alert("Pilih menu!");
+            if (!el.value) return alert("Pilih menu jajanan!");
             jalankanAksi({ action: "tambahJajanan", id: id, nama: el.options[el.selectedIndex].getAttribute('data-nama'), harga: el.value });
         }
 
         function stopBilling(id, total, mulai, selesai, jajanan) {
-            if (!confirm(`STOP ${id}? Total: Rp${total.toLocaleString('id-ID')}`)) return;
+            if (!confirm(`STOP ${id}?\nTotal: Rp${total.toLocaleString('id-ID')}`)) return;
             buatStruk(id, "STRUK KASIR", mulai, selesai, total, jajanan);
             jalankanAksi({ action: "resetPS", id: id });
         }
 
+        function cleanupScript(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
         function buatStruk(id, judul, mulai, selesai, total, jajanan) {
             const area = document.getElementById('area-cetak');
+            if(!area) return;
+            const tgl = new Date().toLocaleDateString('id-ID') + " " + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
             area.innerHTML = `
                 <div style="text-align:center; font-weight:bold;">PS DODI JAYA</div>
                 <div style="text-align:center; font-size:8px;">${judul}</div>
                 <div style="border-bottom:1px dashed #000; margin:2px 0;"></div>
-                <div style="font-size:9px;">Unit: ${id}<br>Jam: ${mulai} - ${selesai}</div>
+                <div style="font-size:9px;">Waktu: ${tgl}<br>Unit: ${id}<br>Jam: ${mulai} - ${selesai}</div>
                 <div style="border-bottom:1px dashed #000; margin:2px 0;"></div>
                 <div style="font-size:8px;">Jajanan:<br>${jajanan}</div>
                 <div style="border-bottom:1px dashed #000; margin:2px 0;"></div>
@@ -169,7 +182,7 @@
 
         function ambilDanCetakLaporan() {
             toggleLoading(true);
-            const cb = 'r_' + Date.now();
+            const cb = 'r_' + Date.now() + Math.round(100 * Math.random());
             window[cb] = function(res) {
                 toggleLoading(false);
                 if (!res || !res.laporan) return;
@@ -182,11 +195,12 @@
                 h += `<div style="border-bottom:1px dashed #000; margin:2px 0;"></div><div style="font-weight:bold;">TOTAL: Rp${total.toLocaleString('id-ID')}</div>`;
                 document.getElementById('area-cetak').innerHTML = h;
                 window.print();
-                document.getElementById(cb).remove();
+                cleanupScript(cb);
                 delete window[cb];
             };
             const s = document.createElement('script');
-            s.id = cb; s.src = `${API_URL}?action=getLaporan&callback=${cb}`;
+            s.id = cb; 
+            s.src = `${API_URL}?action=getLaporan&callback=${cb}`;
             document.body.appendChild(s);
         }
     </script>
