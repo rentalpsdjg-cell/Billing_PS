@@ -18,7 +18,7 @@
         .btn-start { background-color: #1e293b; color: white; border: none; }
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; }
 
-        /* FORMAT ADJUSTMENT PRINTER MINI THERMAL 58mm */
+        /* REKAYASA HALAMAN CETAK THERMAL PRINTER MINI */
         @media print {
             body * { visibility: hidden; }
             #area-cetak, #area-cetak * { visibility: visible; }
@@ -38,7 +38,7 @@
     <div id="loading" class="loading-overlay">
         <div class="text-center">
             <div class="spinner-border text-primary mb-2" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
-            <div class="text-muted small fw-bold">Memuat Data Kasir Dodi Jaya...</div>
+            <div class="text-muted small fw-bold">Sinkronisasi Server Dodi Jaya...</div>
         </div>
     </div>
 
@@ -46,7 +46,7 @@
         <div class="container-fluid px-3 d-flex justify-content-between align-items-center">
             <span class="navbar-brand m-0 fw-bold text-white fs-6">🎮 BILLING DODI JAYA</span>
             <div>
-                <button class="btn btn-warning btn-sm fw-bold me-1 text-dark" onclick="cetakLaporanBulanan()">📊 CETAK BULANAN</button>
+                <button class="btn btn-warning btn-sm fw-bold me-1 text-dark" onclick="cetakLaporanOmsetLive()">📊 PRINT REKAP</button>
                 <button class="btn btn-info btn-sm text-white fw-bold" onclick="muatData()">🔄 REFRESH</button>
             </div>
         </div>
@@ -57,13 +57,12 @@
     </div>
 
     <script>
-        // GANTI URL DI BAWAH INI DENGAN URL DEPLOY BARU ANDA
+        // TEMPELKAN URL WEB APP GOOGLE SCRIPT TERBARU ANDA DI SINI
         const API_URL = "https://script.google.com/macros/s/AKfycbwG6ziAwlZpX3b0bvOZJkTn_od5RLOYFXVxLAzLkBLHGN2Yvy5oCjWwhzp6iUcnmrHA/exec";
         
         let menuJajananGlobal = [];
         let timerIntervals = {};
         let dataPSGlobal = [];
-        let timeoutBuster = null;
 
         document.addEventListener("DOMContentLoaded", function() {
             muatData();
@@ -73,36 +72,25 @@
             document.getElementById('loading').style.display = show ? 'flex' : 'none';
         }
 
+        // FUNGSI UTAMA: Menggunakan FETCH CORS menggantikan sistem JSONP yang macet
         function muatData() {
             toggleLoading(true);
             Object.keys(timerIntervals).forEach(key => clearInterval(timerIntervals[key]));
             timerIntervals = {};
 
-            if (timeoutBuster) clearTimeout(timeoutBuster);
-
-            const callbackName = 'jsonp_' + Date.now() + Math.round(100 * Math.random());
-            
-            // Mekanisme pelindung jika sinyal HP lemot (Mencegah Pop Up mengganggu)
-            timeoutBuster = setTimeout(() => {
-                toggleLoading(false);
-                console.log("Koneksi dialihkan, mencoba memuat ulang secara mandiri.");
-            }, 6000);
-
-            window[callbackName] = function(response) {
-                clearTimeout(timeoutBuster);
-                toggleLoading(false);
-                if (!response || response.error) return;
-                menuJajananGlobal = response.menu || [];
-                dataPSGlobal = response.ps || [];
-                renderDashboard(dataPSGlobal);
-                cleanupScript('scr_load');
-                delete window[callbackName];
-            };
-
-            const script = document.createElement('script');
-            script.id = 'scr_load';
-            script.src = `${API_URL}?action=getAppData&callback=${callbackName}`;
-            document.body.appendChild(script);
+            fetch(`${API_URL}?action=getAppData`, { method: "GET" })
+                .then(res => res.json())
+                .then(response => {
+                    toggleLoading(false);
+                    if (response.error) { alert("Peringatan: " + response.error); return; }
+                    menuJajananGlobal = response.menu || [];
+                    dataPSGlobal = response.ps || [];
+                    renderDashboard(dataPSGlobal);
+                })
+                .catch(err => {
+                    toggleLoading(false);
+                    console.log("Koneksi dialihkan atau data sedang disegarkan.");
+                });
         }
 
         function renderDashboard(dataPS) {
@@ -198,30 +186,21 @@
             timerIntervals[id] = setInterval(hitung, 1000);
         }
 
-        function jalankanAksiJSONP(dataParameter) {
+        function jalankanAksiFetch(dataParameter) {
             toggleLoading(true);
-            const callbackName = 'act_' + Date.now() + Math.round(100 * Math.random());
-            
-            window[callbackName] = function(res) {
-                if (res.success) { muatData(); } else { toggleLoading(false); }
-                cleanupScript('scr_action');
-                delete window[callbackName];
-            };
+            let urlParams = new URLSearchParams(dataParameter).toString();
 
-            let params = "";
-            Object.keys(dataParameter).forEach(key => { params += `&${key}=${encodeURIComponent(dataParameter[key])}`; });
-
-            const script = document.createElement('script');
-            script.id = 'scr_action';
-            script.src = `${API_URL}?callback=${callbackName}${params}`;
-            document.body.appendChild(script);
+            fetch(`${API_URL}?${urlParams}`, { method: "GET" })
+                .then(res => res.json())
+                .then(res => { if (res.success) { muatData(); } else { toggleLoading(false); } })
+                .catch(err => { muatData(); });
         }
 
         function startBilling(id) {
             const jam = document.getElementById(`jam-${id}`).value;
             const tipe = document.getElementById(`tipe-${id}`).value;
             if (!jam || parseFloat(jam) <= 0) { alert("Isi durasi bermain!"); return; }
-            jalankanAksiJSONP({ action: "mulaiMain", id: id, jam: jam, tipe: tipe });
+            jalankanAksiFetch({ action: "mulaiMain", id: id, jam: jam, tipe: tipe });
         }
 
         function beliJajanan(id) {
@@ -230,21 +209,16 @@
             const nama = opt.getAttribute('data-nama');
             const harga = selectEl.value;
             if (!harga) { alert("Pilih jajanan!"); return; }
-            jalankanAksiJSONP({ action: "tambahJajanan", id: id, nama: nama, harga: harga });
+            jalankanAksiFetch({ action: "tambahJajanan", id: id, nama: nama, harga: harga });
         }
 
         function stopBilling(id, totalBiaya, mulai, selesai, jajanan) {
             if (!confirm(`STOP ${id}?\nTotal: Rp${totalBiaya.toLocaleString('id-ID')}`)) return;
             buatKuponThermal(id, "STRUK KASIR", mulai, selesai, totalBiaya, jajanan);
-            jalankanAksiJSONP({ action: "resetPS", id: id });
+            jalankanAksiFetch({ action: "resetPS", id: id });
         }
 
-        function cleanupScript(id) {
-            const el = document.getElementById(id);
-            if (el) el.remove();
-        }
-
-        // FORMAT KUUPON UNTUK PRINTER BLUETOOTH THERMAL MINI
+        // PROSES CETAK NOTA SELESAI MAIN - PRINTER THERMAL BLUETOOTH
         function buatKuponThermal(id, judul, mulai, selesai, total, jajanan) {
             const area = document.getElementById('area-cetak');
             const tgl = new Date().toLocaleDateString('id-ID') + " " + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
@@ -270,7 +244,7 @@
             window.print();
         }
 
-        function cetakLaporanBulanan() {
+        function cetakLaporanOmsetLive() {
             const area = document.getElementById('area-cetak');
             const tgl = new Date().toLocaleDateString('id-ID');
             let barisHTML = "";
@@ -288,8 +262,8 @@
             });
 
             area.innerHTML = `
-                <div style="text-align: center; font-weight: bold; font-size: 12px;">REKAP OMSET BULANAN</div>
-                <div style="text-align: center; font-size: 9px;">Tanggal rekap: ${tgl}</div>
+                <div style="text-align: center; font-weight: bold; font-size: 12px;">REKAP OMSET LIVE</div>
+                <div style="text-align: center; font-size: 9px;">Tanggal: ${tgl}</div>
                 <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
                 <table style="width: 100%; font-size: 9px; border-collapse: collapse;">
                     <thead>
@@ -301,10 +275,10 @@
                 </table>
                 <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
                 <table style="width: 100%; font-size: 11px; font-weight: bold;">
-                    <tr><td>TOTAL REKAP:</td><td style="text-align: right;">Rp${grandTotal.toLocaleString('id-ID')}</td></tr>
+                    <tr><td>TOTAL:</td><td style="text-align: right;">Rp${grandTotal.toLocaleString('id-ID')}</td></tr>
                 </table>
                 <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
-                <div style="text-align: center; font-size: 8px; margin-top: 5px;">*Data rekap permanen aman tersimpan otomatis di Google Sheets.</div>
+                <div style="text-align: center; font-size: 8px; margin-top: 5px;">*Data tersimpan aman di Google Sheets Laporan.</div>
             `;
             window.print();
         }
