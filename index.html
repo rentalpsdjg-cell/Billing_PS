@@ -18,12 +18,12 @@
         .btn-start { background-color: #1e293b; color: white; border: none; }
         .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; }
 
-        /* REKAYASA HALAMAN CETAK THERMAL PRINTER MINI */
+        /* REKAYASA HALAMAN CETAK THERMAL PRINTER MINI (58mm) */
         @media print {
             body * { visibility: hidden; }
             #area-cetak, #area-cetak * { visibility: visible; }
             #area-cetak { 
-                position: absolute; left: 0; top: 0; width: 56mm; 
+                position: absolute; left: 0; top: 0; width: 54mm; 
                 font-family: 'Courier New', Courier, monospace; color: #000;
                 font-size: 10px; line-height: 1.3; padding: 0; margin: 0;
             }
@@ -38,7 +38,7 @@
     <div id="loading" class="loading-overlay">
         <div class="text-center">
             <div class="spinner-border text-primary mb-2" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
-            <div class="text-muted small fw-bold">Sinkronisasi Server Dodi Jaya...</div>
+            <div class="text-muted small fw-bold">Menghubungkan ke Server Dodi Jaya...</div>
         </div>
     </div>
 
@@ -46,7 +46,7 @@
         <div class="container-fluid px-3 d-flex justify-content-between align-items-center">
             <span class="navbar-brand m-0 fw-bold text-white fs-6">🎮 BILLING DODI JAYA</span>
             <div>
-                <button class="btn btn-warning btn-sm fw-bold me-1 text-dark" onclick="cetakLaporanOmsetLive()">📊 PRINT REKAP</button>
+                <button class="btn btn-warning btn-sm fw-bold me-1 text-dark" onclick="cetakLaporanOmsetLive()">📊 REKAP STRUK</button>
                 <button class="btn btn-info btn-sm text-white fw-bold" onclick="muatData()">🔄 REFRESH</button>
             </div>
         </div>
@@ -57,8 +57,8 @@
     </div>
 
     <script>
-        // TEMPELKAN URL WEB APP GOOGLE SCRIPT TERBARU ANDA DI SINI
-        const API_URL = "https://script.google.com/macros/s/AKfycbwG6ziAwlZpX3b0bvOZJkTn_od5RLOYFXVxLAzLkBLHGN2Yvy5oCjWwhzp6iUcnmrHA/exec";
+        // URL SCRIPT BARU ANDA SUDAH AKTIF DI SINI
+        const API_URL = "https://script.google.com/macros/s/AKfycbyBRpnnSv7d5ur3xH2fISXJ4hQXiY_-vaSFOTOndifLy3nVEinEu3wA-jDgCZAIK5wF/exec";
         
         let menuJajananGlobal = [];
         let timerIntervals = {};
@@ -72,25 +72,28 @@
             document.getElementById('loading').style.display = show ? 'flex' : 'none';
         }
 
-        // FUNGSI UTAMA: Menggunakan FETCH CORS menggantikan sistem JSONP yang macet
+        // AMBIL DATA DARI GOOGLE SHEETS
         function muatData() {
             toggleLoading(true);
             Object.keys(timerIntervals).forEach(key => clearInterval(timerIntervals[key]));
             timerIntervals = {};
 
-            fetch(`${API_URL}?action=getAppData`, { method: "GET" })
-                .then(res => res.json())
-                .then(response => {
-                    toggleLoading(false);
-                    if (response.error) { alert("Peringatan: " + response.error); return; }
-                    menuJajananGlobal = response.menu || [];
-                    dataPSGlobal = response.ps || [];
-                    renderDashboard(dataPSGlobal);
-                })
-                .catch(err => {
-                    toggleLoading(false);
-                    console.log("Koneksi dialihkan atau data sedang disegarkan.");
-                });
+            const callbackName = 'jsonp_' + Date.now() + Math.round(100 * Math.random());
+            
+            window[callbackName] = function(response) {
+                toggleLoading(false);
+                if (!response || response.error) return;
+                menuJajananGlobal = response.menu || [];
+                dataPSGlobal = response.ps || [];
+                renderDashboard(dataPSGlobal);
+                cleanupScript(callbackName);
+                delete window[callbackName];
+            };
+
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${API_URL}?action=getAppData&callback=${callbackName}`;
+            document.body.appendChild(script);
         }
 
         function renderDashboard(dataPS) {
@@ -186,21 +189,30 @@
             timerIntervals[id] = setInterval(hitung, 1000);
         }
 
-        function jalankanAksiFetch(dataParameter) {
+        function jalankanAksiJSONP(dataParameter) {
             toggleLoading(true);
-            let urlParams = new URLSearchParams(dataParameter).toString();
+            const callbackName = 'act_' + Date.now() + Math.round(100 * Math.random());
+            
+            window[callbackName] = function(res) {
+                if (res.success) { muatData(); } else { toggleLoading(false); }
+                cleanupScript(callbackName);
+                delete window[callbackName];
+            };
 
-            fetch(`${API_URL}?${urlParams}`, { method: "GET" })
-                .then(res => res.json())
-                .then(res => { if (res.success) { muatData(); } else { toggleLoading(false); } })
-                .catch(err => { muatData(); });
+            let params = "";
+            Object.keys(dataParameter).forEach(key => { params += `&${key}=${encodeURIComponent(dataParameter[key])}`; });
+
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${API_URL}?callback=${callbackName}${params}`;
+            document.body.appendChild(script);
         }
 
         function startBilling(id) {
             const jam = document.getElementById(`jam-${id}`).value;
             const tipe = document.getElementById(`tipe-${id}`).value;
             if (!jam || parseFloat(jam) <= 0) { alert("Isi durasi bermain!"); return; }
-            jalankanAksiFetch({ action: "mulaiMain", id: id, jam: jam, tipe: tipe });
+            jalankanAksiJSONP({ action: "mulaiMain", id: id, jam: jam, tipe: tipe });
         }
 
         function beliJajanan(id) {
@@ -209,16 +221,21 @@
             const nama = opt.getAttribute('data-nama');
             const harga = selectEl.value;
             if (!harga) { alert("Pilih jajanan!"); return; }
-            jalankanAksiFetch({ action: "tambahJajanan", id: id, nama: nama, harga: harga });
+            jalankanAksiJSONP({ action: "tambahJajanan", id: id, nama: nama, harga: harga });
         }
 
         function stopBilling(id, totalBiaya, mulai, selesai, jajanan) {
             if (!confirm(`STOP ${id}?\nTotal: Rp${totalBiaya.toLocaleString('id-ID')}`)) return;
             buatKuponThermal(id, "STRUK KASIR", mulai, selesai, totalBiaya, jajanan);
-            jalankanAksiFetch({ action: "resetPS", id: id });
+            jalankanAksiJSONP({ action: "resetPS", id: id });
         }
 
-        // PROSES CETAK NOTA SELESAI MAIN - PRINTER THERMAL BLUETOOTH
+        function cleanupScript(id) {
+            const el = document.getElementById(id);
+            if (el) el.remove();
+        }
+
+        // TATA LETAK STRUK PRINTER THERMAL MINI BLUETOOTH
         function buatKuponThermal(id, judul, mulai, selesai, total, jajanan) {
             const area = document.getElementById('area-cetak');
             const tgl = new Date().toLocaleDateString('id-ID') + " " + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
