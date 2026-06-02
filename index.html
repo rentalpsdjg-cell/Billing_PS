@@ -38,9 +38,8 @@
   let dataPSGlobal = [];
   let tomSelectInstances = {};
 
-  // Fungsi memuat data utama dari backend spreadsheet
+  // Memuat data dari database Google Sheet melalui Kode.gs
   function load() {
-    // Hancurkan sisa-sisa pencarian TomSelect lama agar tidak menumpuk di memori browser
     Object.keys(tomSelectInstances).forEach(k => {
       if(tomSelectInstances[k]) tomSelectInstances[k].destroy();
     });
@@ -50,38 +49,37 @@
       <div class="text-center mt-5 py-5">
         <div class="spinner-border text-primary mb-3" role="status"></div>
         <h4>🔄 Memuat Data Terbaru...</h4>
-        <p class="text-muted small">Mengambil data dari Google Sheet. Harap tunggu...</p>
+        <p class="text-muted small">Menghubungkan ke Google Sheets backend...</p>
       </div>
     `;
     
-    // Menghubungkan langsung ke fungsi getAppData() di file Kode.gs
+    // google.script.run secara otomatis mengarah ke URL Web App Anda
     google.script.run
       .withSuccessHandler(render)
       .withFailureHandler(tanganiError)
       .getAppData();
   }
 
-  // Fungsi pengaman jika koneksi ke spreadsheet terputus/nama sheet salah
+  // Menangkap error jika backend terputus atau nama tab Sheet salah
   function tanganiError(err) {
     document.getElementById('content').innerHTML = `
       <div class="col-12 mt-4">
         <div class="alert alert-danger shadow-sm text-center" role="alert">
-          <h4 class="alert-heading fw-bold">⚠️ Gagal Memuat Data!</h4>
-          <p class="mb-2">Sistem tidak bisa membaca data dari Google Sheets backend Anda.</p>
+          <h4 class="alert-heading fw-bold">⚠️ Koneksi Gagal!</h4>
+          <p class="mb-2">Aplikasi tidak dapat menarik data dari backend Google Sheets Anda.</p>
           <hr>
           <div class="text-start bg-light p-3 font-monospace text-dark rounded mb-3 small" style="max-height: 150px; overflow-y: auto;">
-            <b>Pesan Error:</b> ${err.message || err}
+            <b>Detail Error:</b> ${err.message || err}
           </div>
-          <p class="small text-muted mb-3">Saran: Periksa apakah nama tab sheet Anda sudah bernama <b>"Dashboard"</b> dan <b>"Menu"</b>.</p>
-          <button onclick="load()" class="btn btn-danger fw-bold px-4">Coba Hubungkan Ulang</button>
+          <p class="small text-muted mb-3">Solusi: Pastikan tab di Google Sheet Anda bernama <b>"Dashboard"</b> dan <b>"Menu"</b>.</p>
+          <button onclick="load()" class="btn btn-danger fw-bold px-4">Coba Lagi</button>
         </div>
       </div>
     `;
   }
 
-  // Fungsi menyusun kotak-kotak (cards) billing stasiun PS secara dinamis
+  // Render Kartu Billing PS
   function render(data) {
-    // Hentikan semua jalannya timer aktif sebelum memuat ulang komponen
     Object.keys(intervals).forEach(k => clearInterval(intervals[k]));
     
     menuGlobal = data.menu || [];
@@ -97,15 +95,13 @@
     dataPSGlobal.forEach(item => {
       const isMain = item.status.includes("🔴 MAIN") || item.status.includes("🔴 SEWA");
       
-      // Membuat list drop-down jajanan secara terstruktur memakai sistem index pengaman
       let options = `<option value="">Cari/Pilih Jajanan...</option>`;
       options += menuGlobal.map((m, index) => {
         if(!m[0] || m[1] === undefined || m[1] === "") return '';
-        
         if(parseInt(m[1]) === 0) {
           return `<option value="" disabled class="fw-bold text-secondary">${m[0]}</option>`;
         }
-        
+        // Menggunakan kombinasi index-harga agar value drop-down dijamin unik
         return `<option value="${index}-${m[1]}" data-nama="${m[0]}" data-harga="${m[1]}">${m[0]} (Rp ${parseInt(m[1]).toLocaleString('id-ID')})</option>`;
       }).join('');
 
@@ -181,7 +177,7 @@
       div.innerHTML = htmlContent;
       container.appendChild(div);
       
-      // Inisialisasi plugin pencarian TomSelect secara mandiri untuk tiap station PS
+      // Inisialisasi TomSelect untuk pencarian pintar drop-down jajanan
       tomSelectInstances[item.noPS] = new TomSelect(`#m-${item.noPS}`, {
         create: false,
         sortField: { field: "text", direction: "asc" },
@@ -194,7 +190,7 @@
     });
   }
 
-  // Perhitungan hitung mundur jam rental secara realtime (waktu lokal kasir)
+  // Jalannya Hitung Mundur Waktu Sesi PS
   function runTimer(id, target) {
     function hitung() {
       const diff = target - new Date().getTime();
@@ -214,7 +210,6 @@
     intervals[id] = setInterval(hitung, 1000);
   }
 
-  // Perintah memulai sesi bermain
   function start(id) {
     const jam = document.getElementById('h-' + id).value;
     const tipePS = document.getElementById('type-' + id).value;
@@ -226,7 +221,7 @@
       .mulaiMain(id, parseFloat(jam), tipePS);
   }
 
-  // Memasukkan belanjaan jajanan ke dalam billing aktif stasiun PS terpilih (Kompabilitas TomSelect 100%)
+  // Fungsi Tambah Jajanan Kasir (Sistem Pembacaan Indeks Aman)
   function pesan(id) {
     const ts = tomSelectInstances[id];
     if (!ts) return alert("Sistem pencarian bermasalah.");
@@ -248,7 +243,6 @@
       .tambahJajananKeSheet(id, namaJajanan, harga);
   }
 
-  // Mencetak kupon prabayar kasir di awal transaksi
   function cetakKuponAwal(id) {
     const inputJam = document.getElementById('h-' + id).value;
     const tipePS = document.getElementById('type-' + id).value;
@@ -270,7 +264,6 @@
     setTimeout(function(){ winKupon.print(); winKupon.close(); }, 300);
   }
 
-  // Mencetak nota fisik billing rincian berjalan ke printer thermal (lebar kertas thermal standar 52mm-58mm)
   function cetakNotaLangsung(id) {
     const item = dataPSGlobal.find(p => p.noPS === id);
     if (!item) return alert("Data tidak ditemukan!");
@@ -290,7 +283,6 @@
     setTimeout(function(){ win.print(); win.close(); }, 300);
   }
 
-  // Menarik laporan log akumulasi dari sheet backend untuk dicetak sebagai rekap omset bulanan kasir
   function cetakLaporanBulanan() {
     google.script.run
       .withSuccessHandler(function(dataLaporan) {
@@ -311,7 +303,6 @@
       .getLaporanBulanan();
   }
 
-  // Menyelesaikan/mengakhiri sesi main station dan melakukan checkout database sheet
   function stop(id) {
     if (confirm("Selesaikan sesi " + id + " dan simpan laporan?")) {
       google.script.run
@@ -321,7 +312,6 @@
     }
   }
 
-  // Menjalankan inisialisasi load data pertama kali saat halaman diakses kasir
   window.onload = load;
 </script>
 </body>
