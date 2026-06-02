@@ -3,164 +3,169 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>BILLING PS - DODI JAYA</title>
+    <title>BILLING PS DODI JAYA</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        /* CSS SPEK DEWA: Super Ringan, Efek Modern, Bebas Framework Berat */
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
-        body { background: #0f172a; color: #f8fafc; padding-bottom: 30px; }
-        
-        /* Header Modern */
-        header { background: #1e293b; padding: 14px 16px; position: sticky; top: 0; display: flex; justify-content: space-between; align-items: center; z-index: 10; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.3); }
-        h1 { font-size: 15px; font-weight: 800; letter-spacing: 0.5px; color: #38bdf8; }
-        
-        /* Tombol Navigasi */
-        .btn-group { display: flex; gap: 6px; }
-        .btn-top { border: none; padding: 8px 12px; font-size: 11px; font-weight: 700; border-radius: 6px; cursor: pointer; display: flex; align-items: center; gap: 4px; transition: opacity 0.2s; }
-        .btn-rekap { background: #f59e0b; color: #1e293b; }
-        .btn-refresh { background: #38bdf8; color: #1e293b; }
-        .btn-top:active { opacity: 0.7; }
-        
-        /* Grid Layout */
-        .grid { padding: 12px; display: grid; grid-template-columns: 1fr; gap: 12px; }
-        @media(min-width: 640px) { .grid { grid-template-columns: repeat(2, 1fr); } }
-        @media(min-width: 1024px) { .grid { grid-template-columns: repeat(3, 1fr); } }
-        
-        /* Kartu PS Premium */
-        .card { background: #1e293b; border-radius: 12px; padding: 14px; border: 1px solid #334155; box-shadow: 0 4px 6px -1px rgba(0,0,0,0.1); display: flex; flex-direction: column; justify-content: space-between; }
-        .row-card { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-        .title { font-size: 16px; font-weight: 700; color: #fff; }
-        
-        /* Badge Status Kasir */
-        .badge { padding: 4px 10px; font-size: 11px; border-radius: 50px; font-weight: 700; text-transform: uppercase; }
-        .bg-ok { background: rgba(16, 185, 129, 0.2); color: #34d399; border: 1px solid #10b981; }
-        .bg-busy { background: rgba(239, 68, 68, 0.2); color: #f87171; border: 1px solid #ef4444; }
-        
-        /* Form Elemen Minimalis */
-        select, input { width: 100%; height: 40px; padding: 0 10px; margin-bottom: 10px; background: #0f172a; border: 1px solid #475569; color: #fff; border-radius: 8px; font-size: 13px; font-weight: 500; outline: none; -webkit-appearance: none; }
-        select:focus, input:focus { border-color: #38bdf8; }
-        
-        /* Tombol Aksi Kasir */
-        .btn-action { width: 100%; height: 42px; border: none; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer; transition: background 0.2s; }
-        .btn-go { background: #38bdf8; color: #0f172a; }
-        .btn-stop { background: #ef4444; color: #fff; }
-        
-        /* Kotak Jajanan Modern */
-        .jajan-box { background: #0f172a; border: 1px solid #334155; padding: 10px; border-radius: 8px; margin-top: 12px; }
-        .jajan-flex { display: flex; gap: 6px; margin-bottom: 6px; }
-        .jajan-flex select { margin-bottom: 0; flex-grow: 1; height: 34px; }
-        .btn-add { width: 40px; height: 34px; background: #f59e0b; color: #1e293b; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
-        .jajan-text { color: #94a3b8; font-size: 11px; }
-        
-        /* Loading Overlay Mulus */
-        #loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.85); display: flex; justify-content: center; align-items: center; font-size: 13px; font-weight: 700; color: #38bdf8; z-index: 100; backdrop-filter: blur(2px); }
-        
-        /* Area Cetak Struk Kasir */
+        body { background-color: #f1f5f9; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+        .navbar-custom { background-color: #0f172a; color: white; }
+        .card-ps { border: none; border-radius: 16px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05); background: white; padding: 16px !important; margin-bottom: 8px; }
+        .badge-status { font-size: 0.85rem; padding: 6px 14px; border-radius: 50px; font-weight: 600; }
+        .bg-tersedia { background-color: #10b981; color: white; }
+        .bg-main { background-color: #ef4444; color: white; }
+        .section-jajanan { background-color: #fffbeb; border: 1px dashed #f59e0b; border-radius: 12px; padding: 12px; }
+        .form-select, .form-control { height: 48px; font-size: 1rem !important; border-radius: 10px; }
+        .btn-custom { height: 48px; font-size: 1rem; font-weight: bold; border-radius: 10px; display: flex; align-items: center; justify-content: center; }
+        .btn-start { background-color: #1e293b; color: white; border: none; }
+        .loading-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,255,255,0.95); display: flex; justify-content: center; align-items: center; z-index: 9999; }
+
         @media print {
             body * { visibility: hidden; }
             #area-cetak, #area-cetak * { visibility: visible; }
-            #area-cetak { position: absolute; left:0; top:0; width: 54mm; font-family: monospace; font-size: 10px; color: #000; background: #fff; padding: 5px; }
+            #area-cetak { 
+                position: absolute; left: 0; top: 0; width: 54mm; 
+                font-family: 'Courier New', Courier, monospace; color: #000;
+                font-size: 10px; line-height: 1.3; padding: 0; margin: 0;
+            }
+            .no-print { display: none !important; }
         }
     </style>
 </head>
 <body>
+
     <div id="area-cetak"></div>
-    <div id="loading">MENGHUBUNGKAN SERVER...</div>
 
-    <header>
-        <h1>🎮 BILLING DODI JAYA</h1>
-        <div class="btn-group">
-            <button class="btn-top btn-rekap" onclick="ambilDanCetakLaporan()">📊 REKAP</button>
-            <button class="btn-top btn-refresh" onclick="muatData()">🔄 REFRESH</button>
+    <div id="loading" class="loading-overlay">
+        <div class="text-center">
+            <div class="spinner-border text-primary mb-2" role="status" style="width: 2.5rem; height: 2.5rem;"></div>
+            <div class="text-muted small fw-bold">Menghubungkan ke Server Dodi Jaya...</div>
         </div>
-    </header>
+    </div>
 
-    <div class="grid" id="container-ps"></div>
+    <nav class="navbar navbar-custom py-2 shadow-sm sticky-top no-print">
+        <div class="container-fluid px-3 d-flex justify-content-between align-items-center">
+            <span class="navbar-brand m-0 fw-bold text-white fs-6">🎮 BILLING DODI JAYA</span>
+            <div>
+                <button class="btn btn-warning btn-sm fw-bold me-1 text-dark" onclick="ambilDanCetakLaporan()">📊 REKAP STRUK</button>
+                <button class="btn btn-info btn-sm text-white fw-bold" onclick="muatData()">🔄 REFRESH</button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container-fluid px-3 mt-3 no-print">
+        <div class="row row-cols-1 row-cols-md-2 row-cols-lg-3 g-3" id="container-ps"></div>
+    </div>
 
     <script>
+        // URL BARU ANDA SUDAH SAYA PASANG DI SINI
         const API_URL = "https://script.google.com/macros/s/AKfycbyK3TOq28xuC2cVtflqs9HAhRGxBuKa5teFitSBRtFrEJfUBwf-iszDQV9TxXmn0AB3/exec";
+        
         let menuJajananGlobal = [];
         let timerIntervals = {};
+        let dataPSGlobal = [];
 
         document.addEventListener("DOMContentLoaded", function() {
             muatData();
         });
 
         function toggleLoading(show) {
-            const loadEl = document.getElementById('loading');
-            if(loadEl) loadEl.style.display = show ? 'flex' : 'none';
+            const loadingEl = document.getElementById('loading');
+            if(loadingEl) loadingEl.style.display = show ? 'flex' : 'none';
         }
 
         function muatData() {
             toggleLoading(true);
-            
-            // Hapus interval timer lama agar tidak tumpang tindih & bikin lemot HP
             Object.keys(timerIntervals).forEach(key => clearInterval(timerIntervals[key]));
             timerIntervals = {};
 
-            const cb = 'j_' + Date.now() + Math.round(100 * Math.random());
-            window[cb] = function(res) {
+            const callbackName = 'jsonp_' + Date.now() + Math.round(100 * Math.random());
+            
+            window[callbackName] = function(response) {
                 toggleLoading(false);
-                if (!res || res.error) return;
-                menuJajananGlobal = res.menu || [];
-                renderDashboard(res.ps || []);
-                cleanupScript(cb);
-                delete window[cb];
+                if (!response || response.error) return;
+                menuJajananGlobal = response.menu || [];
+                dataPSGlobal = response.ps || [];
+                renderDashboard(dataPSGlobal);
+                cleanupScript(callbackName);
+                delete window[callbackName];
             };
-            const s = document.createElement('script');
-            s.id = cb; 
-            s.src = `${API_URL}?action=getAppData&callback=${cb}`;
-            document.body.appendChild(s);
+
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${API_URL}?action=getAppData&callback=${callbackName}`;
+            document.body.appendChild(script);
         }
 
         function renderDashboard(dataPS) {
             const container = document.getElementById('container-ps');
             if(!container) return;
             container.innerHTML = '';
-            
-            let opsiJajanan = `<option value="">+ Tambah Jajanan Kasir</option>`;
-            menuJajananGlobal.forEach(m => {
-                opsiJajanan += `<option value="${m[1]}" data-nama="${m[0]}">${m[0]} (Rp${Number(m[1]).toLocaleString('id-ID')})</option>`;
-            });
 
             dataPS.forEach(ps => {
                 const isMain = ps.status.includes("MAIN");
-                const card = document.createElement('div');
-                card.className = 'card';
-                card.innerHTML = `
-                    <div>
-                        <div class="row-card">
-                            <span class="title">📺 ${ps.noPS}</span>
-                            <span class="badge ${isMain ? 'bg-busy' : 'bg-ok'}">${isMain ? ps.status : 'Tersedia'}</span>
-                        </div>
-                        ${isMain ? `
-                            <div style="background: #0f172a; padding: 8px; border-radius: 6px; text-align: center; margin-bottom: 10px; border: 1px solid #334155;">
-                                <div style="color: #94a3b8; font-size: 11px;">Mulai: <b>${ps.mulai}</b> | Selesai: <b>${ps.selesai}</b></div>
-                                <div style="color: #f87171; font-weight: bold; font-size: 16px; margin-top: 4px;" id="timer-${ps.noPS}">⏳ 00:00:00</div>
-                            </div>
-                            <button class="btn-action btn-stop" onclick="stopBilling('${ps.noPS}', ${ps.biaya}, '${ps.mulai}', '${ps.selesai}', '${ps.jajanan || '-'}')">🛑 STOP & PRINT (Rp${ps.biaya.toLocaleString('id-ID')})</button>
-                        ` : `
-                            <select id="tipe-${ps.noPS}">
-                                <option value="PS3">PLAYSTATION 3 (Rp5.000/j)</option>
-                                <option value="PS4">PLAYSTATION 4 (Rp10.000/j)</option>
-                            </select>
-                            <input type="number" id="jam-${ps.noPS}" placeholder="Berapa jam bermain? (misal: 2)" step="0.5" min="0.5" inputmode="decimal">
-                            <button class="btn-action btn-go" onclick="startBilling('${ps.noPS}')">⚡ MULAI MAIN</button>
-                        `}
-                    </div>
-                    <div class="jajan-box">
-                        <div class="jajan-flex">
-                            <select id="jajan-${ps.noPS}" ${!isMain ? 'disabled' : ''}>${opsiJajanan}</select>
-                            <button class="btn-add" onclick="beliJajanan('${ps.noPS}')" ${!isMain ? 'disabled' : ''}>+</button>
-                        </div>
-                        <div class="jajan-text">Item: <span style="font-weight:700; color:${ps.jajanan ? '#34d399':'#f87171'}">${ps.jajanan || 'Belum jajan'}</span></div>
-                    </div>
-                `;
-                container.appendChild(card);
+                const badgeClass = isMain ? "bg-main" : "bg-tersedia";
+                const statusLabel = isMain ? ps.status : "Tersedia";
 
-                // Jalankan fungsi hitung mundur real-time jika status sedang main
-                if (isMain && ps.selesai) { 
-                    initLiveTimer(ps.noPS, ps.selesai); 
-                }
+                let opsiJajanan = `<option value="">-- Pilih Jajanan Kasir --</option>`;
+                menuJajananGlobal.forEach(item => {
+                    opsiJajanan += `<option value="${item[1]}" data-nama="${item[0]}">${item[0]} (Rp${Number(item[1]).toLocaleString('id-ID')})</option>`;
+                });
+
+                let textJajanan = ps.jajanan ? ps.jajanan : "Belum jajan";
+                let jajanBadgeClass = ps.jajanan ? "text-success fw-bold" : "text-danger";
+
+                let cardHtml = `
+                <div class="col">
+                    <div class="card card-ps">
+                        <div class="d-flex justify-content-between align-items-center mb-3">
+                            <h4 class="fw-bold m-0 text-dark">📺 ${ps.noPS}</h4>
+                            <span class="badge badge-status ${badgeClass}">${statusLabel}</span>
+                        </div>
+                        <div class="mb-2">
+                            <select class="form-select" id="tipe-${ps.noPS}" ${isMain ? 'disabled' : ''}>
+                                <option value="PS3" ${ps.status.includes("PS3") ? "selected" : ""}>PLAYSTATION 3 (Rp5.000/j)</option>
+                                <option value="PS4" ${ps.status.includes("PS4") ? "selected" : ""}>PLAYSTATION 4 (Rp10.000/j)</option>
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            ${isMain ? `
+                                <div class="p-2 border bg-light rounded-3 text-center">
+                                    <div class="text-muted small">Mulai: <b>${ps.mulai}</b> | Selesai: <b>${ps.selesai}</b></div>
+                                    <div class="fw-bold text-danger fs-5 mt-1" id="timer-${ps.noPS}">00:00:00</div>
+                                </div>
+                            ` : `
+                                <input type="number" class="form-control" id="jam-${ps.noPS}" placeholder="Berapa jam?" step="0.5" min="0.5" inputmode="decimal">
+                            `}
+                        </div>
+                        <div class="mb-3">
+                            ${isMain ? `
+                                <div class="row g-2">
+                                    <div class="col-8">
+                                        <button class="btn btn-danger btn-custom w-100" onclick="stopBilling('${ps.noPS}', ${ps.biaya}, '${ps.mulai}', '${ps.selesai}', '${textJajanan}')">
+                                            🛑 STOP (Rp${ps.biaya.toLocaleString('id-ID')})
+                                        </button>
+                                    </div>
+                                    <div class="col-4">
+                                        <button class="btn btn-dark btn-custom w-100" onclick="buatKuponThermal('${ps.noPS}', 'KUPON NOTA', '${ps.mulai}', '${ps.selesai}', ${ps.biaya}, '${textJajanan}')">
+                                            🖨️
+                                        </button>
+                                    </div>
+                                </div>
+                            ` : `
+                                <button class="btn btn-start btn-custom w-100" onclick="startBilling('${ps.noPS}')">START BILLING</button>
+                            `}
+                        </div>
+                        <div class="section-jajanan">
+                            <div class="row g-2">
+                                <div class="col-8"><select class="form-select form-select-sm" id="jajan-${ps.noPS}" ${!isMain ? 'disabled' : ''}>${opsiJajanan}</select></div>
+                                <div class="col-4"><button class="btn btn-warning btn-sm text-white fw-bold w-100 h-100 rounded-3" onclick="beliJajanan('${ps.noPS}')" ${!isMain ? 'disabled' : ''}>➕</button></div>
+                            </div>
+                            <div class="mt-2 text-dark" style="font-size: 0.85rem;"><b>Jajanan:</b> <span class="${jajanBadgeClass}">${textJajanan}</span></div>
+                        </div>
+                    </div>
+                </div>`;
+                container.insertAdjacentHTML('beforeend', cardHtml);
+
+                if (isMain && ps.selesai) { initLiveTimer(ps.noPS, ps.selesai); }
             });
         }
 
@@ -168,65 +173,62 @@
             function hitung() {
                 const sekarang = new Date();
                 const partWaktu = jamSelesaiStr.split(":");
-                if(partWaktu.length < 2) return;
-                
                 let target = new Date();
                 target.setHours(parseInt(partWaktu[0], 10), parseInt(partWaktu[1], 10), 0, 0);
-                
                 if (target < sekarang) target.setDate(target.getDate() + 1);
-                
                 const selisih = target - sekarang;
                 const elemenTimer = document.getElementById(`timer-${id}`);
                 if (!elemenTimer) return;
-                
-                if (selisih <= 0) { 
-                    elemenTimer.innerHTML = `🛑 SELESAI!`; 
-                    clearInterval(timerIntervals[id]); 
-                    return; 
-                }
-                
+                if (selisih <= 0) { elemenTimer.innerHTML = `🛑 SELESAI!`; clearInterval(timerIntervals[id]); return; }
                 const jam = Math.floor(selisih / (1000 * 60 * 60));
                 const menit = Math.floor((selisih % (1000 * 60 * 60)) / (1000 * 60));
                 const detik = Math.floor((selisih % (1000 * 60)) / 1000);
-                
                 elemenTimer.innerHTML = `⏳ ${jam.toString().padStart(2,'0')}:${menit.toString().padStart(2,'0')}:${detik.toString().padStart(2,'0')}`;
             }
             hitung();
             timerIntervals[id] = setInterval(hitung, 1000);
         }
 
-        function jalankanAksi(params) {
+        function jalankanAksiJSONP(dataParameter) {
             toggleLoading(true);
-            const cb = 'a_' + Date.now() + Math.round(100 * Math.random());
-            window[cb] = function(res) {
-                muatData();
-                cleanupScript(cb);
-                delete window[cb];
+            const callbackName = 'act_' + Date.now() + Math.round(100 * Math.random());
+            
+            window[callbackName] = function(res) {
+                if (res && res.success) { muatData(); } else { toggleLoading(false); }
+                cleanupScript(callbackName);
+                delete window[callbackName];
             };
-            let q = `&callback=${cb}`;
-            Object.keys(params).forEach(k => q += `&${k}=${encodeURIComponent(params[k])}`);
-            const s = document.createElement('script');
-            s.id = cb; 
-            s.src = `${API_URL}?${q}`;
-            document.body.appendChild(s);
+
+            let params = "";
+            Object.keys(dataParameter).forEach(key => { params += `&${key}=${encodeURIComponent(dataParameter[key])}`; });
+
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${API_URL}?callback=${callbackName}${params}`;
+            document.body.appendChild(script);
         }
 
+        // AKSI START-STOP
         function startBilling(id) {
             const jam = document.getElementById(`jam-${id}`).value;
-            if (!jam || jam <= 0) return alert("Silakan isi durasi bermain!");
-            jalankanAksi({ action: "mulaiMain", id: id, jam: jam, tipe: document.getElementById(`tipe-${id}`).value });
+            const tipe = document.getElementById(`tipe-${id}`).value;
+            if (!jam || parseFloat(jam) <= 0) { alert("Isi durasi bermain!"); return; }
+            jalankanAksiJSONP({ action: "mulaiMain", id: id, jam: jam, tipe: tipe });
         }
 
         function beliJajanan(id) {
-            const el = document.getElementById(`jajan-${id}`);
-            if (!el.value) return alert("Pilih menu jajanan dulu!");
-            jalankanAksi({ action: "tambahJajanan", id: id, nama: el.options[el.selectedIndex].getAttribute('data-nama'), harga: el.value });
+            const selectEl = document.getElementById(`jajan-${id}`);
+            const opt = selectEl.options[selectEl.selectedIndex];
+            const nama = opt.getAttribute('data-nama');
+            const harga = selectEl.value;
+            if (!harga) { alert("Pilih jajanan!"); return; }
+            jalankanAksiJSONP({ action: "tambahJajanan", id: id, nama: nama, harga: harga });
         }
 
-        function stopBilling(id, total, mulai, selesai, jajanan) {
-            if (!confirm(`Hentikan ${id}?\nTotal Tagihan: Rp${total.toLocaleString('id-ID')}`)) return;
-            buatStruk(id, "STRUK NOTA RESMI", mulai, selesai, total, jajanan);
-            jalankanAksi({ action: "resetPS", id: id });
+        function stopBilling(id, totalBiaya, mulai, selesai, jajanan) {
+            if (!confirm(`STOP ${id}?\nTotal: Rp${totalBiaya.toLocaleString('id-ID')}`)) return;
+            buatKuponThermal(id, "STRUK KASIR", mulai, selesai, totalBiaya, jajanan);
+            jalankanAksiJSONP({ action: "resetPS", id: id });
         }
 
         function cleanupScript(id) {
@@ -234,46 +236,90 @@
             if (el) el.remove();
         }
 
-        function buatStruk(id, judul, mulai, selesai, total, jajanan) {
+        function buatKuponThermal(id, judul, mulai, selesai, total, jajanan) {
             const area = document.getElementById('area-cetak');
             if(!area) return;
             const tgl = new Date().toLocaleDateString('id-ID') + " " + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
+            
             area.innerHTML = `
-                <div style="text-align:center; font-weight:bold; font-size:12px;">PS DODI JAYA</div>
-                <div style="text-align:center; font-size:8px;">${judul}</div>
-                <div style="border-bottom:1px dashed #000; margin:3px 0;"></div>
-                <div style="font-size:9px;">Waktu: ${tgl}<br>Unit : ${id}<br>Durasi: ${mulai} - ${selesai}</div>
-                <div style="border-bottom:1px dashed #000; margin:3px 0;"></div>
-                <div style="font-size:8px;">Rincian Jajanan:<br>${jajanan}</div>
-                <div style="border-bottom:1px dashed #000; margin:3px 0;"></div>
-                <div style="font-weight:bold; font-size:11px;">TOTAL: Rp${total.toLocaleString('id-ID')}</div>
-                <div style="text-align:center; font-size:8px; margin-top:4px;">Terima Kasih!</div>
+                <div style="text-align: center; font-weight: bold; font-size: 13px;">PS DODI JAYA</div>
+                <div style="text-align: center; font-size: 9px;">${judul}</div>
+                <div style="border-bottom: 1px dashed #000; margin: 3px 0;"></div>
+                <table style="width: 100%; font-size: 9px;">
+                    <tr><td>Waktu:</td><td style="text-align: right;">${tgl}</td></tr>
+                    <tr><td>Unit :</td><td style="text-align: right; font-weight: bold;">${id}</td></tr>
+                    <tr><td>Jam  :</td><td style="text-align: right;">${mulai} - ${selesai}</td></tr>
+                </table>
+                <div style="border-bottom: 1px dashed #000; margin: 3px 0;"></div>
+                <div style="font-size: 9px;"><b>Menu Jajanan:</b><br>${jajanan}</div>
+                <div style="border-bottom: 1px dashed #000; margin: 3px 0;"></div>
+                <table style="width: 100%; font-size: 11px; font-weight: bold;">
+                    <tr><td>TOTAL:</td><td style="text-align: right;">Rp${total.toLocaleString('id-ID')}</td></tr>
+                </table>
+                <div style="border-bottom: 1px dashed #000; margin: 3px 0;"></div>
+                <div style="text-align: center; font-size: 9px; margin-top: 3px;">Terima Kasih Atas Kunjungannya!</div>
             `;
             window.print();
         }
 
         function ambilDanCetakLaporan() {
             toggleLoading(true);
-            const cb = 'r_' + Date.now() + Math.round(100 * Math.random());
-            window[cb] = function(res) {
+            const callbackName = 'report_' + Date.now() + Math.round(100 * Math.random());
+            
+            window[callbackName] = function(response) {
                 toggleLoading(false);
-                if (!res || !res.laporan) return;
-                let h = `<div style="text-align:center; font-weight:bold; font-size:11px;">REKAP OMSET LIVE</div><div style="border-bottom:1px dashed #000; margin:3px 0;"></div>`;
-                let total = 0;
-                res.laporan.forEach(i => {
-                    h += `<div style="font-size:8px; margin-bottom:2px;">${i.noPS} (${i.tanggal.split(' ')[1] || ''}) : <b>Rp${i.pendapatan.toLocaleString('id-ID')}</b></div>`;
-                    total += i.pendapatan;
+                if (!response || !response.laporan) { alert("Gagal memuat riwayat!"); return; }
+                
+                const area = document.getElementById('area-cetak');
+                if(!area) return;
+                const tglHariIni = new Date().toLocaleDateString('id-ID');
+                let barisHTML = "";
+                let grandTotal = 0;
+
+                response.laporan.forEach(item => {
+                    barisHTML += `
+                        <tr style="font-size: 9px; border-bottom: 0.5px dashed #ccc;">
+                            <td style="padding: 4px 0;">${item.noPS}<br><span style="font-size:7px; color:#666;">${item.tanggal.split(' ')[1] || ''}</span></td>
+                            <td>${item.jajanan !== "-" ? "Jajan" : "Main"}</td>
+                            <td style="text-align: right;">Rp${item.pendapatan.toLocaleString('id-ID')}</td>
+                        </tr>
+                    `;
+                    grandTotal += item.pendapatan;
                 });
-                h += `<div style="border-bottom:1px dashed #000; margin:3px 0;"></div><div style="font-weight:bold; font-size:11px;">TOTAL OMSET: Rp${total.toLocaleString('id-ID')}</div>`;
-                document.getElementById('area-cetak').innerHTML = h;
+
+                if(response.laporan.length === 0) {
+                    barisHTML = `<tr><td colspan="3" style="text-align:center; font-size:9px; padding:10px 0;">Belum ada omset hari ini</td></tr>`;
+                }
+
+                area.innerHTML = `
+                    <div style="text-align: center; font-weight: bold; font-size: 12px;">REKAP OMSET TOTAL</div>
+                    <div style="text-align: center; font-size: 9px;">Tanggal: ${tglHariIni}</div>
+                    <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                    <table style="width: 100%; font-size: 9px; border-collapse: collapse;">
+                        <thead>
+                            <tr style="border-bottom: 1px solid #000; font-weight: bold;">
+                                <td>UNIT</td><td>TIPE</td><td style="text-align: right;">OMSET</td>
+                            </tr>
+                        </thead>
+                        <tbody>${barisHTML}</tbody>
+                    </table>
+                    <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                    <table style="width: 100%; font-size: 11px; font-weight: bold;">
+                        <tr><td>GRAND TOTAL:</td><td style="text-align: right;">Rp${grandTotal.toLocaleString('id-ID')}</td></tr>
+                    </table>
+                    <div style="border-bottom: 1px dashed #000; margin: 4px 0;"></div>
+                    <div style="text-align: center; font-size: 8px; margin-top: 5px;">*Data ditarik live dari Tab Laporan Sheets</div>
+                `;
+                
+                cleanupScript(callbackName);
+                delete window[callbackName];
                 window.print();
-                cleanupScript(cb);
-                delete window[cb];
             };
-            const s = document.createElement('script');
-            s.id = cb; 
-            s.src = `${API_URL}?action=getLaporan&callback=${cb}`;
-            document.body.appendChild(s);
+
+            const script = document.createElement('script');
+            script.id = callbackName;
+            script.src = `${API_URL}?action=getLaporan&callback=${callbackName}`;
+            document.body.appendChild(script);
         }
     </script>
 </body>
