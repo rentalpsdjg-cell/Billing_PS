@@ -38,17 +38,50 @@
   let dataPSGlobal = [];
   let tomSelectInstances = {};
 
+  // Fungsi memuat data utama dari backend spreadsheet
   function load() {
+    // Hancurkan sisa-sisa pencarian TomSelect lama agar tidak menumpuk di memori browser
     Object.keys(tomSelectInstances).forEach(k => {
       if(tomSelectInstances[k]) tomSelectInstances[k].destroy();
     });
     tomSelectInstances = {};
     
-    document.getElementById('content').innerHTML = '<div class="text-center mt-5">Memuat Data Terbaru...</div>';
-    google.script.run.withSuccessHandler(render).getAppData();
+    document.getElementById('content').innerHTML = `
+      <div class="text-center mt-5 py-5">
+        <div class="spinner-border text-primary mb-3" role="status"></div>
+        <h4>🔄 Memuat Data Terbaru...</h4>
+        <p class="text-muted small">Mengambil data dari Google Sheet. Harap tunggu...</p>
+      </div>
+    `;
+    
+    // Menghubungkan langsung ke fungsi getAppData() di file Kode.gs
+    google.script.run
+      .withSuccessHandler(render)
+      .withFailureHandler(tanganiError)
+      .getAppData();
   }
 
+  // Fungsi pengaman jika koneksi ke spreadsheet terputus/nama sheet salah
+  function tanganiError(err) {
+    document.getElementById('content').innerHTML = `
+      <div class="col-12 mt-4">
+        <div class="alert alert-danger shadow-sm text-center" role="alert">
+          <h4 class="alert-heading fw-bold">⚠️ Gagal Memuat Data!</h4>
+          <p class="mb-2">Sistem tidak bisa membaca data dari Google Sheets backend Anda.</p>
+          <hr>
+          <div class="text-start bg-light p-3 font-monospace text-dark rounded mb-3 small" style="max-height: 150px; overflow-y: auto;">
+            <b>Pesan Error:</b> ${err.message || err}
+          </div>
+          <p class="small text-muted mb-3">Saran: Periksa apakah nama tab sheet Anda sudah bernama <b>"Dashboard"</b> dan <b>"Menu"</b>.</p>
+          <button onclick="load()" class="btn btn-danger fw-bold px-4">Coba Hubungkan Ulang</button>
+        </div>
+      </div>
+    `;
+  }
+
+  // Fungsi menyusun kotak-kotak (cards) billing stasiun PS secara dinamis
   function render(data) {
+    // Hentikan semua jalannya timer aktif sebelum memuat ulang komponen
     Object.keys(intervals).forEach(k => clearInterval(intervals[k]));
     
     menuGlobal = data.menu || [];
@@ -57,13 +90,14 @@
     container.innerHTML = '';
 
     if(dataPSGlobal.length === 0) {
-      container.innerHTML = '<div class="text-center mt-5 text-muted">Tidak ada data Station PS di sheet Dashboard.</div>';
+      container.innerHTML = '<div class="text-center col-12 mt-5 text-muted">Tidak ada data Station PS di sheet Dashboard.</div>';
       return;
     }
 
     dataPSGlobal.forEach(item => {
       const isMain = item.status.includes("🔴 MAIN") || item.status.includes("🔴 SEWA");
       
+      // Membuat list drop-down jajanan secara terstruktur memakai sistem index pengaman
       let options = `<option value="">Cari/Pilih Jajanan...</option>`;
       options += menuGlobal.map((m, index) => {
         if(!m[0] || m[1] === undefined || m[1] === "") return '';
@@ -147,6 +181,7 @@
       div.innerHTML = htmlContent;
       container.appendChild(div);
       
+      // Inisialisasi plugin pencarian TomSelect secara mandiri untuk tiap station PS
       tomSelectInstances[item.noPS] = new TomSelect(`#m-${item.noPS}`, {
         create: false,
         sortField: { field: "text", direction: "asc" },
@@ -159,6 +194,7 @@
     });
   }
 
+  // Perhitungan hitung mundur jam rental secara realtime (waktu lokal kasir)
   function runTimer(id, target) {
     function hitung() {
       const diff = target - new Date().getTime();
@@ -178,13 +214,19 @@
     intervals[id] = setInterval(hitung, 1000);
   }
 
+  // Perintah memulai sesi bermain
   function start(id) {
     const jam = document.getElementById('h-' + id).value;
     const tipePS = document.getElementById('type-' + id).value;
     if (!jam || parseFloat(jam) <= 0) return alert("Isi durasi waktu terlebih dahulu!");
-    google.script.run.withSuccessHandler(load).mulaiMain(id, parseFloat(jam), tipePS);
+    
+    google.script.run
+      .withSuccessHandler(load)
+      .withFailureHandler(tanganiError)
+      .mulaiMain(id, parseFloat(jam), tipePS);
   }
 
+  // Memasukkan belanjaan jajanan ke dalam billing aktif stasiun PS terpilih (Kompabilitas TomSelect 100%)
   function pesan(id) {
     const ts = tomSelectInstances[id];
     if (!ts) return alert("Sistem pencarian bermasalah.");
@@ -200,9 +242,13 @@
     const namaJajanan = selectedOption.getAttribute('data-nama');
     const harga = parseFloat(selectedOption.getAttribute('data-harga'));
 
-    google.script.run.withSuccessHandler(load).tambahJajananKeSheet(id, namaJajanan, harga);
+    google.script.run
+      .withSuccessHandler(load)
+      .withFailureHandler(tanganiError)
+      .tambahJajananKeSheet(id, namaJajanan, harga);
   }
 
+  // Mencetak kupon prabayar kasir di awal transaksi
   function cetakKuponAwal(id) {
     const inputJam = document.getElementById('h-' + id).value;
     const tipePS = document.getElementById('type-' + id).value;
@@ -224,6 +270,7 @@
     setTimeout(function(){ winKupon.print(); winKupon.close(); }, 300);
   }
 
+  // Mencetak nota fisik billing rincian berjalan ke printer thermal (lebar kertas thermal standar 52mm-58mm)
   function cetakNotaLangsung(id) {
     const item = dataPSGlobal.find(p => p.noPS === id);
     if (!item) return alert("Data tidak ditemukan!");
@@ -243,29 +290,38 @@
     setTimeout(function(){ win.print(); win.close(); }, 300);
   }
 
+  // Menarik laporan log akumulasi dari sheet backend untuk dicetak sebagai rekap omset bulanan kasir
   function cetakLaporanBulanan() {
-    google.script.run.withSuccessHandler(function(dataLaporan) {
-      if (!dataLaporan || dataLaporan.length === 0) return alert("Tidak ada data laporan.");
-      let total = 0;
-      let baris = "";
-      dataLaporan.forEach(log => {
-        total += log.pemasukan;
-        baris += '<tr><td>' + log.tanggal + ' - ' + log.noPS + '</td><td style="text-align: right;">Rp ' + log.pemasukan.toLocaleString('id-ID') + '</td></tr>';
-      });
+    google.script.run
+      .withSuccessHandler(function(dataLaporan) {
+        if (!dataLaporan || dataLaporan.length === 0) return alert("Tidak ada data laporan log.");
+        let total = 0;
+        let baris = "";
+        dataLaporan.forEach(log => {
+          total += log.pemasukan;
+          baris += '<tr><td>' + log.tanggal + ' - ' + log.noPS + '</td><td style="text-align: right;">Rp ' + log.pemasukan.toLocaleString('id-ID') + '</td></tr>';
+        });
 
-      const winLaporan = window.open("", "_blank");
-      winLaporan.document.write('<html><head><title>Laporan</title><style>body{font-family:monospace;width:52mm;font-size:10px;margin:0;padding:5px;}table{width:100%;font-size:9px;}.line{border-top:1px dashed #000;margin:5px 0;}</style></head><body><div style="text-align:center;"><b>REKAP OMSET BULANAN</b></div><div class="line"></div><table> ' + baris + '</table><div class="line"></div><table><tr><td>TOTAL</td><td style="text-align:right;">Rp ' + total.toLocaleString('id-ID') + '</td></tr></table></body></html>');
-      winLaporan.document.close();
-      setTimeout(function(){ winLaporan.print(); winLaporan.close(); }, 300);
-    }).getLaporanBulanan();
+        const winLaporan = window.open("", "_blank");
+        winLaporan.document.write('<html><head><title>Laporan</title><style>body{font-family:monospace;width:52mm;font-size:10px;margin:0;padding:5px;}table{width:100%;font-size:9px;}.line{border-top:1px dashed #000;margin:5px 0;}</style></head><body><div style="text-align:center;"><b>REKAP OMSET BULANAN</b></div><div class="line"></div><table> ' + baris + '</table><div class="line"></div><table><tr><td>TOTAL</td><td style="text-align:right;">Rp ' + total.toLocaleString('id-ID') + '</td></tr></table></body></html>');
+        winLaporan.document.close();
+        setTimeout(function(){ winLaporan.print(); winLaporan.close(); }, 300);
+      })
+      .withFailureHandler(tanganiError)
+      .getLaporanBulanan();
   }
 
+  // Menyelesaikan/mengakhiri sesi main station dan melakukan checkout database sheet
   function stop(id) {
     if (confirm("Selesaikan sesi " + id + " dan simpan laporan?")) {
-      google.script.run.withSuccessHandler(load).resetPS(id);
+      google.script.run
+        .withSuccessHandler(load)
+        .withFailureHandler(tanganiError)
+        .resetPS(id);
     }
   }
 
+  // Menjalankan inisialisasi load data pertama kali saat halaman diakses kasir
   window.onload = load;
 </script>
 </body>
