@@ -33,7 +33,7 @@
         .jajan-text { color: #94a3b8; font-size: 11px; }
         #loading { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(15,23,42,0.85); display: flex; justify-content: center; align-items: center; font-size: 13px; font-weight: 700; color: #38bdf8; z-index: 100; backdrop-filter: blur(2px); }
         
-        /* AREA STRUK TERMAL KASIR - SPEK KHUSUS PRINTER HP */
+        /* FIX TOTAL UNTUK PRINTER THERMAL - TEKS MURNI DAN TEBAL */
         #area-cetak { display: none; }
         
         @media print {
@@ -43,21 +43,26 @@
                 display: block !important; 
                 width: 58mm !important; 
                 max-width: 58mm !important;
-                padding: 0px 4px 0px 0px !important; 
+                padding: 0px 2px 0px 0px !important; 
                 margin: 0 !important; 
                 background: #ffffff !important;
                 color: #000000 !important;
                 font-family: 'Courier New', Courier, monospace !important; 
-                font-size: 12px !important; 
-                font-weight: bold !important;
-                line-height: 1.2 !important;
+                font-size: 13px !important; 
+                font-weight: 900 !important; /* Paksa tebal maksimal */
+                line-height: 1.3 !important;
+                letter-spacing: 0px !important;
             }
-            .txt-bold { font-weight: 900 !important; font-size: 13px !important; }
-            .txt-center { text-align: center !important; }
-            .line-break { border-bottom: 2px dashed #000000 !important; margin: 4px 0 !important; width: 100% !important; }
-            table { width: 100% !important; border-collapse: collapse !important; }
-            td { font-family: 'Courier New', Courier, monospace !important; font-size: 12px !important; font-weight: bold !important; color: #000000 !important; padding: 1px 0 !important; }
-            .text-right { text-align: right !important; }
+            #area-cetak * {
+                color: #000000 !important;
+                font-weight: 900 !important; /* Semua elemen wajib tebal */
+            }
+            .txt-center { text-align: center !important; width: 100% !important; }
+            .flex-row { display: block !important; clear: both !important; width: 100% !important; margin-bottom: 2px !important; }
+            .col-left { float: left !important; text-align: left !important; }
+            .col-right { float: right !important; text-align: right !important; }
+            .clear { clear: both !important; height: 0 !important; overflow: hidden !important; }
+            .line-break { text-align: center !important; width: 100% !important; margin: 3px 0 !important; overflow: hidden !important; white-space: nowrap !important; }
         }
     </style>
 </head>
@@ -210,7 +215,7 @@
 
         function stopBilling(id, total, mulai, selesai, jajanan) {
             if (!confirm(`Hentikan ${id}?\nTotal Tagihan: Rp${total.toLocaleString('id-ID')}`)) return;
-            buatStruk(id, "STRUK NOTA KASIR", mulai, selesai, total, jajanan);
+            buatStruk(id, "NOTA RESMI KASIR", mulai, selesai, total, jajanan);
             jalankanAksi({ action: "resetPS", id: id });
         }
 
@@ -225,23 +230,22 @@
             const tgl = new Date().toLocaleDateString('id-ID') + " " + new Date().toLocaleTimeString('id-ID', {hour: '2-digit', minute:'2-digit'});
             
             area.innerHTML = `
-                <div class="txt-center txt-bold">PS DODI JAYA</div>
-                <div class="txt-center" style="font-size:10px;">${judul}</div>
-                <div class="line-break"></div>
-                <table>
-                    <tr><td>Waktu :</td><td class="text-right">${tgl}</td></tr>
-                    <tr><td>Unit  :</td><td class="text-right">${id}</td></tr>
-                    <tr><td>Jam   :</td><td class="text-right">${mulai} - ${selesai}</td></tr>
-                </table>
-                <div class="line-break"></div>
-                <div>JAJANAN:</div>
-                <div style="padding-left:4px; font-size:11px;">${jajanan}</div>
-                <div class="line-break"></div>
-                <table>
-                    <tr class="txt-bold" style="font-size:14px;"><td>TOTAL :</td><td class="text-right">Rp${total.toLocaleString('id-ID')}</td></tr>
-                </table>
-                <div class="line-break"></div>
-                <div class="txt-center" style="font-size:10px;">TERIMA KASIH ATAS KUNJUNGANNYA</div>
+                <div class="txt-center"><b>============================</b></div>
+                <div class="txt-center"><b>PS DODI JAYA</b></div>
+                <div class="txt-center"><b>${judul}</b></div>
+                <div class="txt-center"><b>============================</b></div>
+                <div class="flex-row"><b class="col-left">WAKTU:</b><b class="col-right">${tgl}</b></div><div class="clear"></div>
+                <div class="flex-row"><b class="col-left">UNIT :</b><b class="col-right">${id}</b></div><div class="clear"></div>
+                <div class="flex-row"><b class="col-left">JAM  :</b><b class="col-right">${mulai}-${selesai}</b></div><div class="clear"></div>
+                <div class="txt-center"><b>----------------------------</b></div>
+                <div><b>RINCIAN JAJANAN:</b></div>
+                <div style="word-wrap: break-word;"><b>${jajanan}</b></div>
+                <div class="txt-center"><b>----------------------------</b></div>
+                <div class="flex-row" style="font-size:15px;"><b class="col-left">TOTAL:</b><b class="col-right">Rp${total.toLocaleString('id-ID')}</b></div><div class="clear"></div>
+                <div class="txt-center"><b>============================</b></div>
+                <div class="txt-center"><b>TERIMA KASIH</b></div>
+                <div class="txt-center"><b>MOHON PERIKSA BARANG BAWAAN</b></div>
+                <br><br>
             `;
             window.print();
         }
@@ -262,28 +266,26 @@
                 
                 res.laporan.forEach(i => {
                     barisHTML += `
-                        <tr>
-                            <td>${i.noPS} (${i.tanggal.split(' ')[1] || ''})</td>
-                            <td class="text-right">Rp${i.pendapatan.toLocaleString('id-ID')}</td>
-                        </tr>
+                        <div class="flex-row">
+                            <b class="col-left">${i.noPS} (${i.tanggal.split(' ')[1] || ''})</b>
+                            <b class="col-right">Rp${i.pendapatan.toLocaleString('id-ID')}</b>
+                        </div>
+                        <div class="clear"></div>
                     `;
                     total += i.pendapatan;
                 });
 
                 area.innerHTML = `
-                    <div class="txt-center txt-bold">PS DODI JAYA</div>
-                    <div class="txt-center" style="font-size:10px;">REKAP OMSET LIVE</div>
-                    <div class="txt-center" style="font-size:9px;">Tgl: ${tglHariIni}</div>
-                    <div class="line-break"></div>
-                    <table>
-                        ${barisHTML}
-                    </table>
-                    <div class="line-break"></div>
-                    <table>
-                        <tr class="txt-bold" style="font-size:13px;"><td>TOTAL:</td><td class="text-right">Rp${total.toLocaleString('id-ID')}</td></tr>
-                    </table>
-                    <div class="line-break"></div>
-                    <div class="txt-center" style="font-size:9px;">*Data Live Laporan Sheets</div>
+                    <div class="txt-center"><b>============================</b></div>
+                    <div class="txt-center"><b>PS DODI JAYA</b></div>
+                    <div class="txt-center"><b>LAPORAN OMSET LIVE</b></div>
+                    <div class="txt-center"><b>TANGGAL: ${tglHariIni}</b></div>
+                    <div class="txt-center"><b>============================</b></div>
+                    ${barisHTML}
+                    <div class="txt-center"><b>----------------------------</b></div>
+                    <div class="flex-row" style="font-size:14px;"><b class="col-left">TOTAL :</b><b class="col-right">Rp${total.toLocaleString('id-ID')}</b></div><div class="clear"></div>
+                    <div class="txt-center"><b>============================</b></div>
+                    <br><br>
                 `;
                 
                 window.print();
